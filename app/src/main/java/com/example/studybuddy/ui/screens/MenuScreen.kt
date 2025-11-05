@@ -14,13 +14,24 @@ fun MenuScreen(onNavigate: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Study Buddy — Menu")
         Spacer(modifier = Modifier.height(12.dp))
-        Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("scheduler") }) { Text("Study Scheduler") }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onNavigate("scheduler") }) { Text("Study Scheduler") }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("tasks") }) { Text("Assignments & Tasks") }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onNavigate("tasks") }) { Text("Assignments & Tasks") }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("practice") }) { Text("Practice / Quiz") }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onNavigate("practice") }) { Text("Practice / Quiz") }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("settings") }) { Text("Settings") }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onNavigate("settings") }) { Text("Settings") }
+        Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("profile") }) {
+            Text("My Profile")
+        }
     }
 }
 //ui for menus to navigate to other screens
