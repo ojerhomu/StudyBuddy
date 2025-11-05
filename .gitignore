@@ -1,0 +1,23 @@
+# python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+venv2/  # If you have multiple venv folders like i do
+
+# environment variables / secrets dont push
+.env
+
+# IDEs / editors
+*.idea/
+*.vscode/
+
+# logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

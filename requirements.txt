@@ -1,0 +1,12 @@
+#install all this with pip install -r requirements.txt in terminal
+
+fastapi==0.111.1
+uvicorn[standard]==0.23.2
+sqlalchemy==2.0.22
+psycopg2-binary==2.9.8
+pydantic==2.12.2
+python-dotenv==1.0.0
+passlib[bcrypt]==1.7.4
+python-jose==3.3.0
+firebase-admin==6.1.0
+email-validator

@@ -1,0 +1,54 @@
+# FINALLY The StudyBuddy Backend JESUS CHRIST
+
+This is the FastAPI backend for the StudyBuddy project and should handle user authentication, tasks, and scheduling. 
+
+## Prerequisites
+
+- Python 3.10+ installed
+- PostgreSQL installed and running (for database stuff) 
+(once you install it you'll need to make a password that's ESSENTIAL to running the backend)
+- Git installed duh 
+
+---
+
+## Setup Instructions
+Grab the files I uploaded, hopefully it's all correct 
+here's how i got the backend running:
+
+1. open up command prompt 
+type cd C:\Users\<YourName>\studybuddy-backend> (or however you get to the backend folder)
+I put it in the same folder as AndroidStudioProjects
+-------------------------------------------------------------------------
+2. create a virtual environment to keep our python packages organized for this project
+	on windows for me it's: py -m venv venv (or it could be ptrhon -m venv venv)
+then activate it with
+	venv\Scripts\activate
+-------------------------------------------------------------------------
+3. install dependencies
+paste
+	pip install -r requirements.txt
+this should install all the dependencies in the requirements.txt
+check if everything's been installed with
+	pip list
+-------------------------------------------------------------------------
+4. as devs we need to create our own local databases and secret keys for encryption n stuff so don't use the .env
+file already given to you. Edit it as shown:
+
+DATABASE_URL=postgresql+psycopg2://username:password@localhost/studybuddy   <--username is usually postgres by default. Use the password you made from setting up PostgreSQL 
+SECRET_KEY=your_64_char_hex_secret_here <- I just generated one from the internet
+Note: Do not commit your .env file to GitHub.
+-------------------------------------------------------------------------
+5. create the database tables in cmd prompt/terminal 
+# Option 1: Using the provided script
+	python create_tables.py
+
+# Option 2: Automatically with FastAPI where tables will be created on first run
+
+	uvicorn main:app --reload
+-------------------------------------------------------------------------
+6.run the server
+run 
+	uvicorn app.main:app --reload if you haven't
+
+then open the browser to: http://127.0.0.1:8000
+Swagger docs: http://127.0.0.1:8000/docs
