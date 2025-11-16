@@ -1,35 +1,54 @@
 # main.py
-#AAAAAAAAAAAAAAAH I HATE THIS
+#AAAAAAAAAAAAAAAH I HATE THIS SO MUCH
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, SessionLocal, Base
 import models, schemas
-from auth import hash_password, verify_password, create_access_token, oauth2_scheme, get_current_user
-from fastapi.security import OAuth2PasswordBearer
-from auth import get_current_user
-import models, schemas
-from fastapi import Depends, HTTPException, status
-from routers import tasks
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+from auth import hash_password, verify_password, create_access_token, get_current_user
+from fastapi.security import OAuth2PasswordRequestForm
+from routers import tasks, calendar
+from fastapi.openapi.utils import get_openapi
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.router.redirect_slashes = False  # avoid redirect dropping token
 
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="StudyBuddy API",
+        version="1.0.0",
+        description="Backend API for StudyBuddy (auth + tasks + calendar)",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
+#routers
 app.include_router(tasks.router)
+app.include_router(calendar.router)
 
-#this is CORS middleware for Android/Frontend access
+# cors
 origins = [
-    "http://localhost:3000",  # incase of React
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://localhost:5173",  # incase of Vite
+    "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://localhost:8080",  # Vue / Android WebView
-    "*",  # allow all during development
+    "http://localhost:8080",
 ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -38,14 +57,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-#database dependency
+# database dependency 
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
 
 # authentication routes
 @app.post("/register", response_model=schemas.UserOut)
@@ -63,59 +81,20 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/login", response_model=schemas.Token)
-def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if not db_user or not verify_password(user.password, db_user.hashed_password):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
 
 
-# protected route
 @app.get("/profile", response_model=schemas.UserOut)
 def read_profile(current_user: models.User = Depends(get_current_user)):
     return current_user
 
-
 # temp logout
 @app.post("/logout")
-def logout(token: str = Depends(oauth2_scheme)):
-    return {
-        "message": "You have successfully logged out. (Remove your token on the client side — will secure later)"
-    }
-
-#token-protected routes, tied to the authenticated user
-
-@app.get("/tasks", response_model=list[schemas.TaskOut])
-def get_tasks(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return db.query(models.Task).filter(models.Task.owner_id == current_user.id).all()
-
-
-@app.post("/tasks", response_model=schemas.TaskOut)
-def create_task(
-    task: schemas.TaskCreate,
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    new_task = models.Task(
-        title=task.title,
-        description=task.description,
-        due_date=task.due_date,
-        owner_id=current_user.id
-    )
-    db.add(new_task)
-    db.commit()
-    db.refresh(new_task)
-    return new_task
-
-
-
-@app.delete("/tasks/{task_id}")
-def delete_task(task_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    task = db.query(models.Task).filter(models.Task.id == task_id, models.Task.owner_id == current_user.id).first()
-    if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
-    db.delete(task)
-    db.commit()
-    return {"message": "Task deleted successfully"}
+def logout():
+    return {"message": "Logged out (remove token client-side)"}

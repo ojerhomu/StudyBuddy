@@ -1,8 +1,8 @@
-# routers/tasks.py
+# routers/tasks.py oh my god i hate this section in particular because its so freaking delicate
+# like i touch one thing and have to spend 30 minutes figuring out what I did wronnng
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-
 import models
 import schemas
 from database import get_db
@@ -20,7 +20,7 @@ def create_task(task: schemas.TaskCreate, current_user: models.User = Depends(ge
         title=task.title,
         description=task.description,
         due_date=task.due_date,
-        owner_id=current_user.id
+        owner_id=current_user.id,
     )
     db.add(new_task)
     db.commit()

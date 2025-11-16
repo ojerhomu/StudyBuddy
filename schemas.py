@@ -29,7 +29,6 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     pass
 
-
 class TaskOut(TaskBase):
     id: int
     owner_id: int
@@ -41,3 +40,24 @@ class TaskOut(TaskBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+    # base Event schema (shared properties) (calendar stuff belowh here)
+class EventBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    start_time: datetime
+    end_time: datetime
+    event_type: str  #'assignment', 'quiz', 'test', 'study'
+
+#  for creating a new event
+class EventCreate(EventBase):
+    pass
+
+#  for returning event data (includes database fields)
+class EventOut(EventBase):
+    id: int
+    owner_id: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True

@@ -10,7 +10,7 @@ load_dotenv(dotenv_path=env_path)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable not set or loaded incorrectly")
+    raise ValueError("DATABASE_URL environment variable isn't set orr the whole thing loaded incorrectly")
 print("Loaded DATABASE_URL:", os.getenv("DATABASE_URL"))
 
 engine = create_engine(DATABASE_URL)
