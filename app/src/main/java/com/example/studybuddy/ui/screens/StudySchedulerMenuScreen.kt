@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun MenuScreen(onNavigate: (String) -> Unit) {
+fun StudySchedulerMenuScreen(onNavigate: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -29,40 +29,25 @@ fun MenuScreen(onNavigate: (String) -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Study Buddy - Menu",
+                text = "Study Scheduler",
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(32.dp))
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { onNavigate("study_scheduler_menu") } //  to the new submenu
-            ) { Text("Study Scheduler") }
+                onClick = { onNavigate("start_session") }
+            ) { Text("Start a study session") }
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { onNavigate("task_submenu") }
-            ) { Text("Assignments & Tasks") }
+                onClick = { onNavigate("schedule_session") }
+            ) { Text("Schedule a study session") }
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { onNavigate("calendar") } // to the new calendar screen
-            ) { Text("Calendar") }
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onNavigate("practice") }
-            ) { Text("Practice / Quiz") }
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onNavigate("settings") }
-            ) { Text("Settings") }
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onNavigate("profile") }
-            ) { Text("My Profile") }
+                onClick = { onNavigate("edit_sessions") }
+            ) { Text("Edit my study sessions") }
         }
     }
 }

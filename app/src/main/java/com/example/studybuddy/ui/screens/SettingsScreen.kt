@@ -1,5 +1,8 @@
 package com.example.studybuddy.ui.screens
-//Settings  placeholder if we delete this delete it from AppNavHost
+//settings placeholder if we delete this delete it from AppNavHost
+//dark mode? for the app
+//change name
+//delete account
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

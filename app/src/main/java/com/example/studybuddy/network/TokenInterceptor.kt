@@ -9,21 +9,20 @@ class TokenInterceptor(private val context: Context) : Interceptor {
         val originalRequest = chain.request()
         val builder = originalRequest.newBuilder()
 
-        // get token from SharedPreferences
+        // token from sharedpref
         val sharedPref = context.getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
         val token = sharedPref.getString("JWT_TOKEN", null)
 
-        //for troubleshooting the stupid my profile button
-        if (!token.isNullOrEmpty()) {
-            //auth header in "Bearer <token>" format or something like that
+        // figuring our what's wrong with the tokenss (diagnostics)
+        println("TokenInterceptor running for URL: ${originalRequest.url}")
+        if (token != null) {
+            println("TokenInterceptor: Token found, adding Authorization header.")
             builder.addHeader("Authorization", "Bearer $token")
-            println("TokenInterceptor: Token found. Value: $token")
         } else {
-            println("TokenInterceptor: No token found. Your dumb dumb request will not be authorized")
+            println("TokenInterceptor: Token is null, request will not be authorized.")
         }
 
         val newRequest = builder.build()
         return chain.proceed(newRequest)
     }
 }
-
