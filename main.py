@@ -7,7 +7,7 @@ from database import engine, SessionLocal, Base
 import models, schemas
 from auth import hash_password, verify_password, create_access_token, get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
-from routers import tasks, calendar
+from routers import tasks, calendar, users, chats
 from fastapi.openapi.utils import get_openapi
 
 Base.metadata.create_all(bind=engine)
@@ -40,6 +40,9 @@ app.openapi = custom_openapi
 #routers
 app.include_router(tasks.router)
 app.include_router(calendar.router)
+app.include_router(users.router)
+app.include_router(users.public_router)
+app.include_router(chats.router)
 
 # cors
 origins = [
