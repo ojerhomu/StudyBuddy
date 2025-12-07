@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -26,13 +28,16 @@ fun DatePickerDialog(
         ) {
             CalendarView(
                 yearMonth = currentYearMonth,
-                events = emptyList(), // No need to show events in the picker
+                events = emptyList(), // dont show events in the picker
                 onPreviousMonth = { currentYearMonth = currentYearMonth.minusMonths(1) },
                 onNextMonth = { currentYearMonth = currentYearMonth.plusMonths(1) },
                 onDateSelected = { date ->
                     onDateSelected(date)
-                    onDismissRequest() // Close the dialog on selection
-                }
+                    onDismissRequest() // close the dialog on selection
+                },
+                onEventSelected = {},
+                subjectDetailsMap = emptyMap(),
+                classSchedule = emptyMap() // DO THIS: add the missing parameter here
             )
         }
     }

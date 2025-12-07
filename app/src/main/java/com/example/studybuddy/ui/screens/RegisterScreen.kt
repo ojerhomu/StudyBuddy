@@ -1,5 +1,6 @@
 package com.example.studybuddy.ui.screens
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -53,12 +54,25 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit) {
         Button(onClick = {
             coroutineScope.launch {
                 try {
-                    val response = RetrofitInstance.getInstance(context).register(UserCreateRequest(email, password))
-                    if (response.isSuccessful) {
-                        Toast.makeText(context, "Registration successful! Please log in.", Toast.LENGTH_LONG).show()
-                        onRegisterSuccess()
+                    val registerResponse = RetrofitInstance.publicApi.register(UserCreateRequest(email, password))
+                    if (registerResponse.isSuccessful) {
+                        // auto login after successful registration
+                        val loginResponse = RetrofitInstance.publicApi.login(email, password)
+                        if (loginResponse.isSuccessful) {
+                            val token = loginResponse.body()?.access_token
+                            if (token != null) {
+                                val sharedPref = context.getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
+                                sharedPref.edit().putString("JWT_TOKEN", token).commit()
+                                // go to onboarding only after token is saved
+                                onRegisterSuccess()
+                            } else {
+                                Toast.makeText(context, "Auto-login failed: Token not received.", Toast.LENGTH_LONG).show()
+                            }
+                        } else {
+                             Toast.makeText(context, "Auto-login failed after registration.", Toast.LENGTH_LONG).show()
+                        }
                     } else {
-                        val errorBody = response.errorBody()?.string()
+                        val errorBody = registerResponse.errorBody()?.string()
                         Toast.makeText(context, "Registration failed: $errorBody", Toast.LENGTH_LONG).show()
                     }
                 } catch (e: Exception) {

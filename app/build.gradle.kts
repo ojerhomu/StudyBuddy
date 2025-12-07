@@ -6,7 +6,8 @@ plugins {
 }
 
 android {
-    namespace = "com.studybuddy"
+    // FIX: Changed namespace to match the project's directory structure
+    namespace = "com.example.studybuddy"
     compileSdk = 34
 
     defaultConfig {
@@ -55,11 +56,14 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.14")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
 
     // firebase ai
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
     implementation("com.google.firebase:firebase-ai")
+
+    // Coil for image loading (including GIFs)
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil-gif:2.6.0")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }

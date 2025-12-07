@@ -17,16 +17,14 @@ import com.example.studybuddy.network.RetrofitInstance
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun LoginScreen(onLogin: () -> Unit, onNavigateToRegister: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -56,30 +54,24 @@ fun LoginScreen(onLogin: () -> Unit, onNavigateToRegister: () -> Unit) {
 
         Button(
             onClick = {
-                CoroutineScope(Dispatchers.IO).launch {
+                coroutineScope.launch {
                     try {
-                        val response = RetrofitInstance.getInstance(context).login(email, password)
-                        withContext(Dispatchers.Main) {
-                            if (response.isSuccessful) {
-                                val token = response.body()?.access_token
-                                if (token != null) {
-                                    val sharedPref = context.getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
-                                    with(sharedPref.edit()) {
-                                        putString("JWT_TOKEN", token)
-                                        commit()
-                                    }
-                                    onLogin()
-                                } else {
-                                    Toast.makeText(context, "Login failed: Token not received.", Toast.LENGTH_SHORT).show()
-                                }
+                        val response = RetrofitInstance.publicApi.login(email, password)
+                        if (response.isSuccessful) {
+                            val token = response.body()?.access_token
+                            if (token != null) {
+                                // make sure token is saved before navigating
+                                val sharedPref = context.getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
+                                sharedPref.edit().putString("JWT_TOKEN", token).commit()
+                                onLogin()
                             } else {
-                                Toast.makeText(context, "Invalid credentials", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Login failed: Token not received.", Toast.LENGTH_SHORT).show()
                             }
+                        } else {
+                            Toast.makeText(context, "Invalid credentials", Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             },

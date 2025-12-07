@@ -28,12 +28,11 @@ fun ViewTasksScreen() {
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // grabs tasks when the screen is resumed
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 coroutineScope.launch {
-                    val response = RetrofitInstance.getInstance(context).getTasks()
+                    val response = RetrofitInstance.getAuthApi(context).getTasks()
                     if (response.isSuccessful) {
                         tasks = response.body() ?: emptyList()
                     } else {
@@ -46,7 +45,6 @@ fun ViewTasksScreen() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // confirmation dialog for deleting a task
     taskToDelete?.let { task ->
         AlertDialog(
             onDismissRequest = { taskToDelete = null },
@@ -55,9 +53,9 @@ fun ViewTasksScreen() {
             confirmButton = {
                 Button(onClick = {
                     coroutineScope.launch {
-                        val response = RetrofitInstance.getInstance(context).deleteTask(task.id)
+                        val response = RetrofitInstance.getAuthApi(context).deleteTask(task.id)
                         if (response.isSuccessful) {
-                            tasks = tasks.filter { it.id != task.id } // Update UI immediately
+                            tasks = tasks.filter { it.id != task.id }
                         } else {
                             errorMessage = "Failed to delete task: ${response.code()}"
                         }
@@ -71,7 +69,6 @@ fun ViewTasksScreen() {
         )
     }
 
-    //main
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         if (errorMessage.isNotEmpty()) {
             Text(errorMessage, color = MaterialTheme.colorScheme.error)

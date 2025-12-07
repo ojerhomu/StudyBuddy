@@ -24,7 +24,6 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
-//this is a manual study session creator, you could replace this with AI code, but for now this is all manual
 @Composable
 fun ScheduleSessionScreen(onSaveSuccess: () -> Unit) {
     var title by remember { mutableStateOf("") }
@@ -35,7 +34,6 @@ fun ScheduleSessionScreen(onSaveSuccess: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // show the time picker dialog when a date is selected
     if (showTimePicker) {
         TimePickerDialog(
             onDismissRequest = { showTimePicker = false },
@@ -67,13 +65,12 @@ fun ScheduleSessionScreen(onSaveSuccess: () -> Unit) {
                     coroutineScope.launch {
                         try {
                             val startDateTime = date.atTime(time)
-                            // Assume a default 1-hour duration for the event
                             val endDateTime = startDateTime.plusHours(1)
 
-                            val response = RetrofitInstance.getInstance(context).createEvent(
+                            val response = RetrofitInstance.getAuthApi(context).createEvent(
                                 EventRequest(
                                     title = title,
-                                    description = null, // Add the missing description parameter
+                                    description = null,
                                     start_time = startDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
                                     end_time = endDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
                                     event_type = "STUDY_SESSION"
@@ -107,8 +104,11 @@ fun ScheduleSessionScreen(onSaveSuccess: () -> Unit) {
             onNextMonth = { currentYearMonth = currentYearMonth.plusMonths(1) },
             onDateSelected = { date ->
                 selectedDate = date
-                showTimePicker = true // open the time picker when a date is tapped
-            }
+                showTimePicker = true
+            },
+            onEventSelected = {},
+            subjectDetailsMap = emptyMap(),
+            classSchedule = emptyMap()
         )
     }
 }

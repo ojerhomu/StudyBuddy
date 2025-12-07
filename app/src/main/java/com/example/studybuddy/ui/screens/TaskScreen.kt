@@ -9,7 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.example.studybuddy.network.RetrofitInstance
 import com.example.studybuddy.network.Task
 import com.example.studybuddy.network.TaskRequest
@@ -17,7 +20,7 @@ import com.example.studybuddy.ui.components.DatePickerDialog
 import com.example.studybuddy.ui.components.TimePickerDialog
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalDateTime // Add the missing import
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -27,6 +30,7 @@ fun TaskScreen() {
     var tasks by remember { mutableStateOf(listOf<Task>()) }
     var errorMessage by remember { mutableStateOf("") }
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     var newTaskTitle by remember { mutableStateOf("") }
     var newTaskDescription by remember { mutableStateOf("") }
@@ -36,7 +40,29 @@ fun TaskScreen() {
     var showTimePicker by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    // --- Dialogs ---
+    // fetch tasks on resume
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                coroutineScope.launch {
+                    try {
+                        val response = RetrofitInstance.getAuthApi(context).getTasks()
+                        if (response.isSuccessful) {
+                            tasks = response.body() ?: emptyList()
+                        } else {
+                            errorMessage = "Failed to load tasks: ${response.code()}"
+                        }
+                    } catch (e: Exception) {
+                        errorMessage = "Error: ${e.message}"
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // dialogs
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -64,7 +90,7 @@ fun TaskScreen() {
             confirmButton = {
                 Button(onClick = {
                     coroutineScope.launch {
-                        val response = RetrofitInstance.getInstance(context).deleteTask(task.id)
+                        val response = RetrofitInstance.getAuthApi(context).deleteTask(task.id)
                         if (response.isSuccessful) {
                             tasks = tasks.filter { it.id != task.id }
                         } else {
@@ -80,7 +106,7 @@ fun TaskScreen() {
         )
     }
 
-    // MAIN
+    // THE MAIN UI
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Assignments and Tasks", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(16.dp))
@@ -89,7 +115,7 @@ fun TaskScreen() {
             Text(errorMessage, color = MaterialTheme.colorScheme.error)
         }
 
-        // TASK LIST
+        // LIST FOR TASkS
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(tasks) { task ->
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -117,7 +143,7 @@ fun TaskScreen() {
 
         Spacer(Modifier.height(16.dp))
 
-        //NEW TASK
+        // add new task section
         OutlinedTextField(
             value = newTaskTitle,
             onValueChange = { newTaskTitle = it },
@@ -149,9 +175,9 @@ fun TaskScreen() {
                         val dueDateTimeStr = if (dueDate != null && dueTime != null) {
                             dueDate!!.atTime(dueTime!!).format(DateTimeFormatter.ISO_DATE_TIME)
                         } else { null }
-                        val resp = RetrofitInstance.getInstance(context).createTask(TaskRequest(newTaskTitle, newTaskDescription.ifBlank { null }, dueDateTimeStr))
+                        val resp = RetrofitInstance.getAuthApi(context).createTask(TaskRequest(newTaskTitle, newTaskDescription.ifBlank { null }, dueDateTimeStr, subject = null))
                         if (resp.isSuccessful) {
-                            val getTasksResp = RetrofitInstance.getInstance(context).getTasks()
+                            val getTasksResp = RetrofitInstance.getAuthApi(context).getTasks()
                             if (getTasksResp.isSuccessful) { tasks = getTasksResp.body() ?: emptyList() }
                             newTaskTitle = ""; newTaskDescription = ""; dueDate = null; dueTime = null
                         } else { errorMessage = "Failed to create task: ${resp.code()}" }

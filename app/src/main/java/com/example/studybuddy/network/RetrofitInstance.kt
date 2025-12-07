@@ -7,21 +7,41 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    private var retrofit: Retrofit? = null
+    // Client for public endpoints (no interceptor)
+    private val publicRetrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(PublicApiService.BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
 
-    fun getInstance(context: Context): ApiService {
-        if (retrofit == null) {
-            val client = OkHttpClient.Builder()
-                .addInterceptor(TokenInterceptor(context)) // injects JWT
-                .build()
+    val publicApi: PublicApiService by lazy {
+        publicRetrofit.create(PublicApiService::class.java)
+    }
 
-            retrofit = Retrofit.Builder()
-                .baseUrl(ApiService.BASE_URL)
-                .client(client)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
+    // --- Authenticated Client ---
+
+    @Volatile
+    private var AUTH_INSTANCE: AuthApiService? = null
+
+    fun getAuthApi(context: Context): AuthApiService {
+        return AUTH_INSTANCE ?: synchronized(this) {
+            val instance = buildAuthApiService(context)
+            AUTH_INSTANCE = instance
+            instance
         }
-        return retrofit!!.create(ApiService::class.java)
+    }
+
+    private fun buildAuthApiService(context: Context): AuthApiService {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(TokenInterceptor(context.applicationContext))
+            .build()
+
+        return Retrofit.Builder()
+            .baseUrl(PublicApiService.BASE_URL) // Use the same base URL
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(AuthApiService::class.java)
     }
 }
-

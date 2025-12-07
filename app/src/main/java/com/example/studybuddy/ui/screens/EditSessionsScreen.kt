@@ -28,14 +28,12 @@ fun EditSessionsScreen() {
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // gets events when the screen is resumed
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 coroutineScope.launch {
-                    val response = RetrofitInstance.getInstance(context).getEvents()
+                    val response = RetrofitInstance.getAuthApi(context).getEvents()
                     if (response.isSuccessful) {
-                        // Filter for study sessions only
                         studySessions = response.body()?.filter { it.event_type == "STUDY_SESSION" } ?: emptyList()
                     } else {
                         errorMessage = "Failed to load sessions: ${response.code()}"
@@ -47,7 +45,6 @@ fun EditSessionsScreen() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // confirming deletetion
     sessionToDelete?.let { session ->
         AlertDialog(
             onDismissRequest = { sessionToDelete = null },
@@ -56,11 +53,11 @@ fun EditSessionsScreen() {
             confirmButton = {
                 Button(onClick = {
                     coroutineScope.launch {
-                        val response = RetrofitInstance.getInstance(context).deleteEvent(session.id)
+                        val response = RetrofitInstance.getAuthApi(context).deleteEvent(session.id)
                         if (response.isSuccessful) {
                             studySessions = studySessions.filter { it.id != session.id }
                         } else {
-                            errorMessage = "I couldn't delete the session: ${response.code()}"
+                            errorMessage = "Failed to delete session: ${response.code()}"
                         }
                         sessionToDelete = null
                     }
@@ -72,7 +69,6 @@ fun EditSessionsScreen() {
         )
     }
 
-    //main ui
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("My Study Sessions", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(16.dp))

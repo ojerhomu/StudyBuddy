@@ -65,7 +65,7 @@ private fun TimeInput(label: String, value: String, onValueChange: (String) -> U
     OutlinedTextField(
         value = value,
         onValueChange = {
-            // Allow only digits and keep it within a reasonable length
+            // allow only digits and keep it within a reasonable length
             if (it.all { char -> char.isDigit() } && it.length <= 2) {
                 onValueChange(it)
             }
