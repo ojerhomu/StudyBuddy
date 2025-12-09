@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About the App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        nav {
+            background: #333;
+            padding: 15px;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            margin: 0 20px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav a:hover { text-decoration: underline; }
+
+        header {
+            background: #4A90E2;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .content {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .buttons a {
+            display: inline-block;
+            margin: 10px;
+            padding: 12px 20px;
+            background: #4A90E2;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a { color: #4A90E2; text-decoration: none; }
+
+        .logo-row {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .logo-row img {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav>
+    <a href="/StudyBuddy/website/index.html">Home</a>
+    <a href="/StudyBuddy/website/about.html">About</a>
+    <a href="/StudyBuddy/website/demo.html">Demo</a>
+</nav>
+
+
+<header>
+    <h1>About This App</h1>
+    <p>Learn more about the Study Buddy App.</p>
+</header>
+
+<div class="content">
+    <h2>Description</h2>
+    <p>
+        Study Buddy was created for college students who juggle heavy workloads and need a dedicated
+        space to manage their academic life. Instead of mixing school reminders with personal notifications,
+        the app offers a clean, separate environment designed specifically for class schedules, study plans,
+        and assignments. At the center of the experience is El the Elephant, an AI agent
+        powered by Google Gemini through Firebase. El helps students analyze deadlines, understand time
+        availability, and generate personalized study sessions to stay ahead in their courses.
+    </p>
+
+    <p>
+        The app combines everything a student needs into one place: a Pomodoro-driven Study Scheduler,
+        an Assignments Tasks organizer, a smart Calendar for classes and due dates, and a Practice Quiz
+        section where El assists with reviewing course concepts. Study Buddy was built with scalability and
+        security in mind, but more importantly, it was designed to support students in developing better habits,
+        managing stress, and staying academically organized every day.
+    </p>
+
+    <p>
+        El the Elephant is your personal AI study companion inside the Study Buddy app. Powered by
+        Google Gemini through Firebase, El assists with analyzing your class schedule, deadlines, and
+        availability to generate optimized study sessions tailored to your needs. El can also quiz you,
+        help you practice course topics, and provide encouragement during Pomodoro study sessions.
+    </p>
+
+    <div style="text-align: center; margin: 20px 0;">
+        <img src="mascot_el.png" alt="El the Study Buddy mascot" width="150">
+    </div>
+
+    <h2>Background</h2>
+    <p>
+        Our application uses a client-server architecture to separate the database from the interactive mobile platform.
+        The user interface is designed using Kotlin Android. The architecture of the backend is established in Python using FastAPI
+        to bridge the gap between the two interfaces. Data maintenance is handled by PostgreSQL. The artificial intelligence agent
+        used to create study schedules is installed via Gemini 2.5.
+    </p>
+
+    <div class="logo-row">
+        <img src="postgresql.png" alt="PostgreSQL" width="150">
+        <img src="fastapi.png" alt="FastAPI" width="150">
+        <img src="kotlin.png" alt="Kotlin" width="150">
+    </div>
+
+    <h2>Status</h2>
+    <p>
+        The Study Buddy App is still in development but close to completion! Progress on the program
+        can be followed via the attached GitHub repository.
+    </p>
+
+    <h2>Repository</h2>
+    <div class="buttons">
+        <a href="https://github.com/ojerhomu/StudyBuddy" target="_blank">Link to GitHub</a>
+        <a href="INDY1-StudyBuddy-FinalReport.pdf" download>Download Report</a>
+    </div>
+</div>
+
+</body>
+</html>

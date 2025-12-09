@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StudyBuddy Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+
+        nav {
+            background-color: #333;
+            padding: 15px;
+            text-align: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .content {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        /* center the video */
+        .video-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .video-container iframe {
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav>
+    <a href="/StudyBuddy/website/index.html">Home</a>
+    <a href="/StudyBuddy/website/about.html">About</a>
+    <a href="/StudyBuddy/website/demo.html">Demo</a>
+</nav>
+
+
+<div class="content">
+    <h1>App Demonstration</h1>
+
+    <p style="text-align: center;">
+        Watch the video below to see how the Study Buddy mobile app works.
+    </p>
+
+    <div class="video-container">
+        <!-- youtube link -->
+        <iframe
+            width="560"
+            height="315"
+            src="https://www.youtube.com/embed/K42vQsWD3mY"
+            title="StudyBuddy Demo Video"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+</body>
+</html>
