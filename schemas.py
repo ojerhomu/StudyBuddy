@@ -16,6 +16,9 @@ class UserOut(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     education_level: Optional[EducationLevel] = None
+    pomodoro_study_minutes: Optional[int] = None
+    pomodoro_short_break_minutes: Optional[int] = None
+    pomodoro_long_break_minutes: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -26,6 +29,9 @@ class UserProfileUpdate(BaseModel):
     first_name: str
     last_name: str
     education_level: Optional[EducationLevel] = None
+    pomodoro_study_minutes: Optional[int] = None
+    pomodoro_short_break_minutes: Optional[int] = None
+    pomodoro_long_break_minutes: Optional[int] = None
 
     @field_validator("education_level", mode="before")
     def normalize_education_level(cls, v):
@@ -43,7 +49,25 @@ class UserProfileUpdate(BaseModel):
             return mapping[text]
         raise ValueError("education_level must be one of: Middle School, High School, College")
 
-# Task Schemas
+    @field_validator("pomodoro_study_minutes", "pomodoro_short_break_minutes", "pomodoro_long_break_minutes")
+    def validate_positive(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Pomodoro durations must be positive minutes")
+        return v
+
+
+class PomodoroPreferencesUpdate(BaseModel):
+    pomodoro_study_minutes: int
+    pomodoro_short_break_minutes: int
+    pomodoro_long_break_minutes: int
+
+    @field_validator("pomodoro_study_minutes", "pomodoro_short_break_minutes", "pomodoro_long_break_minutes")
+    def validate_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Pomodoro durations must be positive minutes")
+        return v
+
+# task Schemas
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -84,7 +108,7 @@ class EventOut(EventBase):
 
     model_config = ConfigDict(from_attributes=True)
 
-# Course Schemas
+# course Schemas
 class UserCourseBase(BaseModel):
     course_name: str
     subject_category: Optional[str] = None
@@ -110,7 +134,7 @@ class UserCoursesCreateRequest(BaseModel):
             raise ValueError("You can only store up to 7 courses")
         return v
 
-# Schedule Schemas
+# schedule Schemas
 class ClassScheduleBase(BaseModel):
     course_id: Optional[int] = None
     course_name: Optional[str] = None
@@ -178,7 +202,7 @@ class ScheduleCreateRequest(BaseModel):
     schedules: List[ClassScheduleCreate]
 
 
-# Chat Schemas
+# chat Schemas
 class ChatSessionCreate(BaseModel):
     title: str
     messages: List[Any]

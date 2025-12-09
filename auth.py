@@ -9,7 +9,7 @@ import models
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-SECRET_KEY = "508df33052c5c8875e6518fe9740bac11307387dbc80fce3b6d180015e441fd4"
+SECRET_KEY = "508df33052c5c8875e6518fe9740bac11307387dbc80fce3b6d180015e441fd4" # encryption used a hex  generator, if to set up the database on your own device you ened to genereate your own key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 

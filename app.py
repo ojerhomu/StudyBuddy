@@ -6,7 +6,7 @@ from typing import List
 app = FastAPI()
 
 
-# Pydantic models
+# pydantic models
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -27,7 +27,7 @@ class ScheduleRequest(BaseModel):
     datetime: str
 
 
-# In-memory stores for prototype
+# in memory stores for prototype
 TASKS = [Task(id=1, title="Math HW 3", due_date="2025-10-15")]
 
 

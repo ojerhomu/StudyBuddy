@@ -1,0 +1,153 @@
+# FINALLY The StudyBuddy Backend JESUS CHRIST
+
+This is the FastAPI backend for the StudyBuddy project and should handle user authentication, tasks, and scheduling. 
+
+## Prerequisites
+
+- Python 3.10+ installed (venv recommended)
+- PostgreSQL installed and running (for database stuff) 
+(once you install it you'll need to make a password that's ESSENTIAL to running the backend)
+- Git installed duh 
+
+---
+
+## Setup Instructions
+Grab the files I uploaded, hopefully it's all correct 
+here's how i got the backend running:
+
+1. open up command prompt 
+type cd C:\Users\<YourName>\studybuddy-backend> (or however you get to the backend folder)
+I put it in the same folder as AndroidStudioProjects
+-------------------------------------------------------------------------
+2. create a virtual environment to keep our python packages organized for this project
+	on windows for me it's: py -m venv venv (or it could be ptrhon -m venv venv)
+then activate it with
+	venv\Scripts\activate
+
+
+So the commands so far are:
+
+git clone https://github.com/ojerhomu/StudyBuddy.git
+cd StudyBuddyBackend   # adjust to the backend folder path
+python -m venv venv
+./venv/Scripts/activate  # Windows PowerShell
+pip install -r requirements.txt
+
+-------------------------------------------------------------------------
+3. configure the environment
+Create `.env` in the backend folder:
+```
+DATABASE_URL=postgresql+psycopg2://postgres:studdybuddy@localhost/studybuddy
+```
+Adjust user/password/host/db as needed.
+-------------------------------------------------------------------------
+4. install dependencies
+paste
+	pip install -r requirements.txt
+this should install all the dependencies in the requirements.txt
+check if everything's been installed with
+	pip list
+-------------------------------------------------------------------------
+5. as devs we need to create our own local databases and secret keys for encryption n stuff so don't use the .env
+file already given to you. Edit it as shown:
+
+DATABASE_URL=postgresql+psycopg2://username:password@localhost/studybuddy   <--username is usually postgres by default. Use the password you made from setting up PostgreSQL 
+SECRET_KEY=your_64_char_hex_secret_here <- I just generated one from the internet
+Note: Do not commit your .env file to GitHub.
+-------------------------------------------------------------------------
+6. create the database tables in cmd prompt/terminal (OPEN database in pgadmin4)
+# Option 1: Using the provided script
+	python create_tables.py
+
+# Option 2: Automatically with FastAPI where tables will be created on first run
+
+	uvicorn main:app --reload
+
+To double check if the tables have been made run these in psql (I right click the study buddy server and click query tool)
+-- core tables (if not already created)
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR UNIQUE,
+  hashed_password VARCHAR,
+  first_name VARCHAR,
+  last_name VARCHAR,
+  education_level VARCHAR,
+  pomodoro_study_minutes INTEGER,
+  pomodoro_short_break_minutes INTEGER,
+  pomodoro_long_break_minutes INTEGER
+);
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS pomodoro_study_minutes INTEGER,
+  ADD COLUMN IF NOT EXISTS pomodoro_short_break_minutes INTEGER,
+  ADD COLUMN IF NOT EXISTS pomodoro_long_break_minutes INTEGER;
+
+CREATE TABLE IF NOT EXISTS user_courses (
+  id SERIAL PRIMARY KEY,
+  course_name VARCHAR NOT NULL,
+  subject_category VARCHAR,
+  color VARCHAR,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS class_schedules (
+  id SERIAL PRIMARY KEY,
+  day_of_week VARCHAR,
+  start_time TIME,
+  end_time TIME,
+  is_asynchronous BOOLEAN DEFAULT FALSE,
+  course_id INTEGER NOT NULL REFERENCES user_courses(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS tasks (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR NOT NULL,
+  description VARCHAR,
+  due_date TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS events (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR NOT NULL,
+  description VARCHAR,
+  start_time TIMESTAMP NOT NULL,
+  end_time TIMESTAMP NOT NULL,
+  event_type VARCHAR NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS chat_sessions (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR NOT NULL,
+  messages JSON NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+```
+If you already have tables, ensure the added columns exist (the `ALTER TABLE` above is idempotent).
+-------------------------------------------------------------------------
+7. run the API
+	./venv/Scripts/activate
+	uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+Open http://localhost:8000/docs for Swagger UI.
+-------------------------------------------------------------------------
+for reference here are key endpoints:(auth required for most)
+- POST `/register` (email, password)
+- POST `/login` (form: username, password) → Bearer token
+- GET `/profile`
+- PATCH `/profile` (names, education_level, pomodoro prefs)
+- PATCH `/profile/preferences` (pomodoro prefs only)
+- POST `/users/me/courses` (list of courses with optional color)
+- POST `/profile/schedule` (accepts map of courses → {color, schedule[]})
+- GET `/profile/schedule`
+- Chats: GET `/chats`, GET `/chats/{id}`, POST `/chats`
+- Tasks: `/tasks/` CRUD
+- Calendar: `/calendar/events` CRUD
+-------------------------------------------------------------------------
+i suck at documenting but hopefully this helps you guys set up the backend -Jasper
+
+

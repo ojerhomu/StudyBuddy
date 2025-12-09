@@ -1,0 +1,25 @@
+{
+  "schedule": {
+    "Computer Science 1": {
+      "color": "#FF00FF00",
+      "schedule": [
+        {"day": "MONDAY", "startTime": "09:00", "endTime": "10:30"},
+        {"day": "TUESDAY", "startTime": "09:00", "endTime": "10:30"}
+      ]
+    },
+    "Calculus 2": {
+      "color": "#FFFFFF00",
+      "schedule": [
+        {"day": "TUESDAY", "startTime": "13:00", "endTime": "14:30"},
+        {"day": "WEDNESDAY", "startTime": "13:00", "endTime": "14:30"}
+      ]
+    },
+    "Biology": {
+      "color": "#FF9C409C",
+      "schedule": [
+        {"day": "THURSDAY", "startTime": "09:00", "endTime": "10:30"},
+        {"day": "FRIDAY", "startTime": "09:00", "endTime": "10:30"}
+      ]
+    }
+  }
+}

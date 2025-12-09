@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Any
+from datetime import datetime
 
 import models
 import schemas
@@ -20,6 +21,12 @@ def _apply_profile_update(profile: schemas.UserProfileUpdate, current_user: mode
     db_user.last_name = profile.last_name
     if profile.education_level is not None:
         db_user.education_level = profile.education_level
+    if profile.pomodoro_study_minutes is not None:
+        db_user.pomodoro_study_minutes = profile.pomodoro_study_minutes
+    if profile.pomodoro_short_break_minutes is not None:
+        db_user.pomodoro_short_break_minutes = profile.pomodoro_short_break_minutes
+    if profile.pomodoro_long_break_minutes is not None:
+        db_user.pomodoro_long_break_minutes = profile.pomodoro_long_break_minutes
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -42,6 +49,37 @@ def update_profile_no_prefix(
     db: Session = Depends(get_db),
 ):
     return _apply_profile_update(profile, current_user, db)
+
+
+def _apply_pomodoro_preferences(pref: schemas.PomodoroPreferencesUpdate, current_user: models.User, db: Session):
+    db_user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    db_user.pomodoro_study_minutes = pref.pomodoro_study_minutes
+    db_user.pomodoro_short_break_minutes = pref.pomodoro_short_break_minutes
+    db_user.pomodoro_long_break_minutes = pref.pomodoro_long_break_minutes
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+@public_router.patch("/profile/preferences", response_model=schemas.UserOut)
+def update_preferences_no_prefix(
+    preferences: schemas.PomodoroPreferencesUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return _apply_pomodoro_preferences(preferences, current_user, db)
+
+
+@router.patch("/preferences", response_model=schemas.UserOut)
+def update_preferences(
+    preferences: schemas.PomodoroPreferencesUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return _apply_pomodoro_preferences(preferences, current_user, db)
 
 
 @router.post("/courses", response_model=List[schemas.UserCourseOut], status_code=status.HTTP_201_CREATED)
@@ -81,49 +119,62 @@ def set_schedule(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return _save_schedule(payload, current_user, db)
+    items = [i.model_dump() for i in payload.schedules]
+    return _save_schedule(items, current_user, db)
 
 
-def _save_schedule(payload: schemas.ScheduleCreateRequest, current_user: models.User, db: Session):
-    if not payload.schedules:
+def _save_schedule(items: List[dict[str, Any]], current_user: models.User, db: Session):
+    if not items:
         raise HTTPException(status_code=400, detail="No schedule entries provided")
 
     user_courses = db.query(models.UserCourse).filter(models.UserCourse.user_id == current_user.id).all()
     courses_by_id = {c.id: c for c in user_courses}
     courses_by_name = {c.course_name: c for c in user_courses}
+    courses_by_norm = {c.course_name.strip().lower(): c for c in user_courses}
 
     target_course_ids = set()
     normalized_items = []
 
-    for item in payload.schedules:
-        # Resolve or create course
+    for item in items:
+        # reslove or create course
         course = None
-        if item.course_id:
-            course = courses_by_id.get(item.course_id)
+        color = item.get("color")
+        skip_insert = item.get("skip_insert", False)
+        course_id_val = item.get("course_id")
+        course_name_val = item.get("course_name")
+        if course_id_val:
+            course = courses_by_id.get(course_id_val)
             if not course:
                 raise HTTPException(status_code=404, detail="Course not found for this user")
         else:
-            course = courses_by_name.get(item.course_name)
+            normalized_name = (course_name_val or "").strip().lower()
+            course = courses_by_norm.get(normalized_name)
             if not course:
                 course = models.UserCourse(
-                    course_name=item.course_name,
+                    course_name=course_name_val,
                     subject_category=None,
-                    color=None,
+                    color=color,
                     user_id=current_user.id,
                 )
                 db.add(course)
                 db.flush()
                 courses_by_id[course.id] = course
                 courses_by_name[course.course_name] = course
+                courses_by_norm[normalized_name] = course
+
+        if color is not None and course.color != color:
+            course.color = color
+            db.add(course)
 
         target_course_ids.add(course.id)
         normalized_items.append(
             {
                 "course_id": course.id,
-                "day_of_week": item.day_of_week,
-                "start_time": item.start_time,
-                "end_time": item.end_time,
-                "is_asynchronous": item.is_asynchronous,
+                "day_of_week": item.get("day_of_week"),
+                "start_time": item.get("start_time"),
+                "end_time": item.get("end_time"),
+                "is_asynchronous": item.get("is_asynchronous", False),
+                "skip_insert": skip_insert,
             }
         )
 
@@ -132,7 +183,21 @@ def _save_schedule(payload: schemas.ScheduleCreateRequest, current_user: models.
         db.flush()
 
     new_schedules: List[models.ClassSchedule] = []
+    seen = set()
     for data in normalized_items:
+        skip = data.pop("skip_insert", False)
+        if skip:
+            continue
+        dedupe_key = (
+            data["course_id"],
+            data["day_of_week"],
+            data["start_time"],
+            data["end_time"],
+            data["is_asynchronous"],
+        )
+        if dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
         sched = models.ClassSchedule(**data)
         db.add(sched)
         new_schedules.append(sched)
@@ -242,8 +307,54 @@ def get_profile_schedule(
 
 @public_router.post("/profile/schedule", response_model=List[schemas.ClassScheduleOut], status_code=status.HTTP_201_CREATED)
 def save_profile_schedule(
-    payload: schemas.ScheduleCreateRequest,
+    payload: dict = Body(...),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return _save_schedule(payload, current_user, db)
+    # make sure to support both the original list format and the new map format
+    if "schedules" in payload:
+        model = schemas.ScheduleCreateRequest.model_validate(payload)
+        items = [i.model_dump() for i in model.schedules]
+        return _save_schedule(items, current_user, db)
+
+    if "schedule" in payload:
+        items: List[dict[str, Any]] = []
+        for course_name, subject in payload["schedule"].items():
+            color = subject.get("color")
+            entries = subject.get("schedule", [])
+            if not entries:
+                # clear existing schedules for this course, but don't insert new rows; still update color
+                items.append(
+                    {
+                        "course_name": course_name,
+                        "is_asynchronous": True,
+                        "day_of_week": None,
+                        "start_time": None,
+                        "end_time": None,
+                        "color": color,
+                        "skip_insert": True,
+                    }
+                )
+                continue
+
+            for entry in entries:
+                day = entry.get("day")
+                start = entry.get("startTime")
+                end = entry.get("endTime")
+                start_time_obj = datetime.strptime(start, "%H:%M").time() if start else None
+                end_time_obj = datetime.strptime(end, "%H:%M").time() if end else None
+                items.append(
+                    {
+                        "course_name": course_name,
+                        "day_of_week": day,
+                        "start_time": start_time_obj,
+                        "end_time": end_time_obj,
+                        "is_asynchronous": False,
+                        "color": color,
+                    }
+                )
+        if not items:
+            raise HTTPException(status_code=400, detail="No schedule entries provided")
+        return _save_schedule(items, current_user, db)
+
+    raise HTTPException(status_code=400, detail="Invalid schedule payload")
