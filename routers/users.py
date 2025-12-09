@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from typing import List, Any
 from datetime import datetime
+from datetime import time as time_obj
 
 import models
 import schemas
@@ -269,6 +270,18 @@ def _color_for_category(category: str | None) -> str:
     return palette.get(category or "", "#3B82F6")
 
 
+def _parse_time_flexible(value: str | None) -> time_obj | None:
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%H:%M").time()
+    except ValueError:
+        try:
+            return datetime.strptime(value, "%H:%M:%S").time()
+        except ValueError:
+            return time_obj.fromisoformat(value)
+
+
 @public_router.get("/profile/schedule")
 def get_profile_schedule(
     current_user: models.User = Depends(get_current_user),
@@ -341,8 +354,8 @@ def save_profile_schedule(
                 day = entry.get("day")
                 start = entry.get("startTime")
                 end = entry.get("endTime")
-                start_time_obj = datetime.strptime(start, "%H:%M").time() if start else None
-                end_time_obj = datetime.strptime(end, "%H:%M").time() if end else None
+                start_time_obj = _parse_time_flexible(start)
+                end_time_obj = _parse_time_flexible(end)
                 items.append(
                     {
                         "course_name": course_name,

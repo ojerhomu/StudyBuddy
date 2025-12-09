@@ -208,6 +208,11 @@ class ChatSessionCreate(BaseModel):
     messages: List[Any]
 
 
+class ChatSessionUpdate(BaseModel):
+    title: Optional[str] = None
+    messages: List[Any]
+
+
 class ChatSessionSummary(BaseModel):
     id: int
     title: str

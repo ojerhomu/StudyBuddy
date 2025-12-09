@@ -57,3 +57,30 @@ def create_chat(
     db.commit()
     db.refresh(new_chat)
     return new_chat
+
+
+@router.put("/{chat_id}", response_model=schemas.ChatSessionOut)
+@router.patch("/{chat_id}", response_model=schemas.ChatSessionOut)
+def update_chat(
+    chat_id: int,
+    chat: schemas.ChatSessionUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    existing = (
+        db.query(models.ChatSession)
+        .filter(
+            models.ChatSession.id == chat_id,
+            models.ChatSession.user_id == current_user.id,
+        )
+        .first()
+    )
+    if not existing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
+    if chat.title is not None:
+        existing.title = chat.title
+    existing.messages = chat.messages
+    db.add(existing)
+    db.commit()
+    db.refresh(existing)
+    return existing
