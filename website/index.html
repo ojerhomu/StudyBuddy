@@ -28,7 +28,20 @@
 
         .section { padding: 40px 20px; text-align: center; }
         .features { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
-        .feature-box { width: 250px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .feature-box {
+            width: 260px;
+            padding: 16px 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: white;
+        }
+        .feature-box img { width: 42px; height: 42px; object-fit: contain; }
+        .feature-text { text-align: left; }
+        .feature-text h3 { margin: 0 0 6px 0; }
+        .feature-text p { margin: 0; line-height: 1.4; }
 
         footer { background: #f4f4f4; padding: 20px; text-align: center; margin-top: 40px; }
     </style>
@@ -64,16 +77,25 @@
     <h2>Features</h2>
     <div class="features">
         <div class="feature-box">
-            <h3>Calendar</h3>
-            <p>Keep track of due dates with an interactive calendar.</p>
+            <img src="/StudyBuddy/website/images/cal.png" alt="Calendar icon">
+            <div class="feature-text">
+                <h3>Calendar</h3>
+                <p>Keep track of due dates with an interactive calendar.</p>
+            </div>
         </div>
         <div class="feature-box">
-            <h3>Organization</h3>
-            <p>Build a system to organize class curriculum.</p>
+            <img src="/StudyBuddy/website/images/org.png" alt="Organization icon">
+            <div class="feature-text">
+                <h3>Organization</h3>
+                <p>Build a system to organize class curriculum.</p>
+            </div>
         </div>
         <div class="feature-box">
-            <h3>Scheduling</h3>
-            <p>Use artificial intelligence to generate study schedules.</p>
+            <img src="/StudyBuddy/website/images/study.png" alt="Scheduling icon">
+            <div class="feature-text">
+                <h3>Scheduling</h3>
+                <p>Use artificial intelligence to generate study schedules.</p>
+            </div>
         </div>
     </div>
 </div>
