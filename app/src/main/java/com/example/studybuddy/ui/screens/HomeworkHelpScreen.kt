@@ -3,8 +3,6 @@ package com.example.studybuddy.ui.screens
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.studybuddy.network.ProfileResponse
-import com.example.studybuddy.network.RetrofitInstance
 import com.example.studybuddy.ui.ChatViewModel
 import com.example.studybuddy.ui.OnboardingViewModel
 import com.example.studybuddy.ui.components.ChatUi
@@ -17,23 +15,21 @@ fun HomeworkHelpScreen(
     chatId: String?
 ) {
     val context = LocalContext.current
-    var profile by remember { mutableStateOf<ProfileResponse?>(null) }
+    val userFirstName by onboardingViewModel.firstName
     var chatStarted by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = chatId) {
-        val response = RetrofitInstance.getAuthApi(context).getProfile()
-        if (response.isSuccessful) {
-            profile = response.body()
-        }
-
         if (chatId != null && chatId != "new") {
             chatViewModel.loadChatSession(context, chatId.toInt())
             chatStarted = true
         } else {
+            // reset for a new chat
+            chatViewModel.startConversation("", userFirstName ?: "User")
             chatStarted = false
         }
     }
-    
+
+    // save the chat session on dispose if it's a new chat
     DisposableEffect(chatId) {
         onDispose {
             if (chatId == "new" && chatViewModel.messages.size > 1) {
@@ -48,18 +44,14 @@ fun HomeworkHelpScreen(
             subjects = onboardingViewModel.subjectDetailsMap.keys.toList()
         ) {
             subject ->
-            val userName = profile?.first_name ?: "User"
-            chatViewModel.startConversation(subject, userName)
+            chatViewModel.startConversation(subject, userFirstName ?: "User")
             chatStarted = true
         }
     } else {
-        profile?.let {
-            // FIX THISSSS: Use the correct ChatViewModel,  ChatUi
-            ChatUi(
-                messages = chatViewModel.messages,
-                userName = it.first_name ?: "You",
-                onSendMessage = { chatViewModel.sendMessage(it) }
-            )
-        }
+        ChatUi(
+            messages = chatViewModel.messages,
+            userName = userFirstName ?: "You",
+            onSendMessage = { message -> chatViewModel.sendMessage(message) } // correct call
+        )
     }
 }

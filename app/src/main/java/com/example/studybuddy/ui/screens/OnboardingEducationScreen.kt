@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-
+//TODO: if we ever expand the app make this actually do something, there's no purpose of education level at the moment
 @Composable
 fun OnboardingEducationScreen(onNext: (String) -> Unit) {
     val options = listOf("Middle School", "High School", "College")

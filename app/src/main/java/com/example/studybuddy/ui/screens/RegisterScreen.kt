@@ -62,7 +62,7 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit) {
                             val token = loginResponse.body()?.access_token
                             if (token != null) {
                                 val sharedPref = context.getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
-                                sharedPref.edit().putString("JWT_TOKEN", token).commit()
+                                sharedPref.edit().putString("JWT_TOKEN", token).apply()
                                 // go to onboarding only after token is saved
                                 onRegisterSuccess()
                             } else {

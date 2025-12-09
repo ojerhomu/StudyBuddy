@@ -2,6 +2,7 @@ package com.example.studybuddy.network
 
 import android.content.Context
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -33,8 +34,10 @@ object RetrofitInstance {
     }
 
     private fun buildAuthApiService(context: Context): AuthApiService {
+        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
         val client = OkHttpClient.Builder()
             .addInterceptor(TokenInterceptor(context.applicationContext))
+            .addInterceptor(logging)
             .build()
 
         return Retrofit.Builder()

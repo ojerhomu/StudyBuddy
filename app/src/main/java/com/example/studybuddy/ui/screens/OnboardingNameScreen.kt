@@ -11,11 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.studybuddy.ui.OnboardingViewModel
 
 @Composable
-fun OnboardingNameScreen(onboardingViewModel: OnboardingViewModel = viewModel(), onNext: () -> Unit) {
+fun OnboardingNameScreen(onboardingViewModel: OnboardingViewModel, onNext: () -> Unit) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -53,7 +52,8 @@ fun OnboardingNameScreen(onboardingViewModel: OnboardingViewModel = viewModel(),
         )
         Spacer(modifier = Modifier.height(32.dp))
         Button(
-            onClick = { 
+            onClick = {
+                // call the ViewModel function to save the name
                 onboardingViewModel.saveUserName(context, firstName, lastName)
                 onNext()
             },

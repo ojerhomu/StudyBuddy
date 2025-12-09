@@ -73,7 +73,7 @@ fun CalendarScreen(onboardingViewModel: OnboardingViewModel) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // --- Day Details Dialog ---
+    // day details
     selectedDate?.let {
         date ->
         val eventsForDay = combinedEvents.filter {

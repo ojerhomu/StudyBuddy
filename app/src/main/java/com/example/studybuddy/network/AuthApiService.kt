@@ -1,5 +1,6 @@
 package com.example.studybuddy.network
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -8,12 +9,31 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import java.time.DayOfWeek
-import java.time.LocalTime
 
 // --- Data Classes for Authenticated API ---
 
-data class ProfileResponse(val email: String, val first_name: String?, val last_name: String?)
-data class ProfileUpdateRequest(val first_name: String, val last_name: String)
+data class ProfileResponse(
+    val id: Int,
+    val email: String,
+    @SerializedName("first_name") val firstName: String?,
+    @SerializedName("last_name") val lastName: String?,
+    @SerializedName("education_level") val educationLevel: String?,
+    @SerializedName("pomodoro_study_minutes") val pomodoroStudyMinutes: Int?,
+    @SerializedName("pomodoro_short_break_minutes") val pomodoroShortBreakMinutes: Int?,
+    @SerializedName("pomodoro_long_break_minutes") val pomodoroLongBreakMinutes: Int?
+)
+
+data class ProfileUpdateRequest(
+    @SerializedName("first_name") val firstName: String,
+    @SerializedName("last_name") val lastName: String,
+    @SerializedName("education_level") val educationLevel: String? = null
+)
+
+data class PomodoroPreferenceRequest(
+    @SerializedName("pomodoro_study_minutes") val studyMinutes: Int,
+    @SerializedName("pomodoro_short_break_minutes") val shortBreakMinutes: Int,
+    @SerializedName("pomodoro_long_break_minutes") val longBreakMinutes: Int
+)
 
 data class Task(val id: Int, val title: String, val description: String?, val due_date: String?, val subject: String?)
 data class TaskRequest(val title: String, val description: String?, val due_date: String?, val subject: String?)
@@ -27,7 +47,7 @@ data class CalendarEvent(
     val event_type: String,
     val owner_id: Int,
     val created_at: String,
-    val subject: String? = null 
+    val subject: String? = null
 )
 
 data class EventRequest(
@@ -43,11 +63,9 @@ data class EventRequest(
 data class ScheduleInfo(val day: DayOfWeek, val startTime: String?, val endTime: String?)
 data class SubjectDetails(val schedule: List<ScheduleInfo>, val color: String)
 data class UserScheduleResponse(val schedule: Map<String, SubjectDetails>)
+data class ApiScheduleSaveRequest(val schedule: Map<String, SubjectDetails>)
 
-data class ApiClassSchedule(val course_name: String, val day_of_week: String, val start_time: String?, val end_time: String?)
-data class ApiScheduleSaveRequest(val schedules: List<ApiClassSchedule>)
-
-// --- Data classes for Chat --- 
+// --- Data classes for Chat ---
 data class ChatMessage(val message: String, val isFromUser: Boolean)
 data class ChatSessionSummary(val id: Int, val title: String, val created_at: String)
 data class ChatSessionDetail(val id: Int, val title: String, val messages: List<ChatMessage>)
@@ -61,7 +79,10 @@ interface AuthApiService {
     suspend fun getProfile(): Response<ProfileResponse>
 
     @PATCH("/profile")
-    suspend fun updateProfile(@Body request: ProfileUpdateRequest): Response<Unit>
+    suspend fun updateProfile(@Body request: ProfileUpdateRequest): Response<ProfileResponse>
+
+    @PATCH("/profile/preferences")
+    suspend fun updatePomodoroPreferences(@Body request: PomodoroPreferenceRequest): Response<ProfileResponse>
 
     @POST("/profile/schedule")
     suspend fun saveSchedule(@Body scheduleData: ApiScheduleSaveRequest): Response<Unit>

@@ -17,7 +17,7 @@ class QuizViewModel : ViewModel() {
     val messages: List<ChatMessage> = _messages
 
     private val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
-        modelName = "gemini-2.5-flash",
+        modelName = "gemini-2.0-flash-001",
         systemInstruction = content(role = "system") {
             text("""
                 You are El, a friendly and encouraging study buddy. Your goal is to quiz the user to help them study.

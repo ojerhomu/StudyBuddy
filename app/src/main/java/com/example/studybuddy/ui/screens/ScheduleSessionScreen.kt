@@ -40,7 +40,8 @@ fun ScheduleSessionScreen(onSaveSuccess: () -> Unit) {
             onTimeSelected = {
                 selectedTime = it
                 showTimePicker = false
-            }
+            },
+            subjectName = "Study Session"
         )
     }
 

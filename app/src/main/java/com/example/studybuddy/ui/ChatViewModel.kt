@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.studybuddy.network.ChatMessage // FIX: import the correct ChatMessage class
+import com.example.studybuddy.network.ChatMessage
 import com.example.studybuddy.network.CreateChatRequest
 import com.example.studybuddy.network.RetrofitInstance
 import com.google.firebase.Firebase
@@ -17,8 +17,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-
-
 class ChatViewModel : ViewModel() {
 
     private val _messages = mutableStateListOf<ChatMessage>()
@@ -26,7 +24,7 @@ class ChatViewModel : ViewModel() {
     private var sessionId: Int? = null
 
     private val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
-        modelName = "gemini-2.5-flash",
+        modelName = "gemini-2.0-flash-001",
         systemInstruction = content(role = "system") {
             text("You are El, a friendly and encouraging study buddy. Your goal is to help students with their homework by guiding them to the answer, not by giving it away. Ask questions, provide hints, and break down problems into smaller steps. Always be patient and positive. The user's name will be provided at the start of the conversation; use it occasionally.")
         }
@@ -39,6 +37,8 @@ class ChatViewModel : ViewModel() {
             try {
                 val response = RetrofitInstance.getAuthApi(context).getChatSession(chatId)
                 if (response.isSuccessful && response.body() != null) {
+                    val chatHistory = response.body()!!.messages.map { content(if (it.isFromUser) "user" else "model") { text(it.message) } }
+                    chat = generativeModel.startChat(history = chatHistory)
                     _messages.clear()
                     _messages.addAll(response.body()!!.messages)
                     sessionId = response.body()!!.id
@@ -52,6 +52,7 @@ class ChatViewModel : ViewModel() {
     }
 
     fun sendMessage(userMessage: String) {
+        if (userMessage.isBlank()) return
         _messages.add(ChatMessage(userMessage, true))
 
         viewModelScope.launch {
@@ -71,28 +72,32 @@ class ChatViewModel : ViewModel() {
     fun startConversation(subject: String, userName: String) {
         _messages.clear()
         sessionId = null
+        chat = generativeModel.startChat(history = emptyList())
         val initialMessage = "My name is $userName and I need some help with my $subject homework."
-        
+        _messages.add(ChatMessage(initialMessage, true)) // add user message to history
+
         viewModelScope.launch {
-             try {
-                chat = generativeModel.startChat(history = emptyList())
+            try {
                 val response = chat.sendMessage(initialMessage)
                 response.text?.let {
                     _messages.add(ChatMessage(it, false))
                 }
             } catch (e: Exception) {
-                 _messages.add(ChatMessage("Sorry, I had a problem starting our chat. Please select a subject again.", false))
+                _messages.add(ChatMessage("Sorry, I had a problem starting our chat. Please select a subject again.", false))
             }
         }
     }
 
     fun saveChat(context: Context) {
-        if (sessionId != null) return // dont save an already saved chat
+        if (sessionId != null || _messages.size <= 1) return
 
         viewModelScope.launch {
             try {
                 val title = "Chat from ${LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))}"
-                RetrofitInstance.getAuthApi(context).saveChatSession(CreateChatRequest(title, _messages.toList()))
+                val response = RetrofitInstance.getAuthApi(context).saveChatSession(CreateChatRequest(title, _messages.toList()))
+                if (response.isSuccessful) {
+                    sessionId = response.body()?.id
+                }
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Failed to save chat session", e)
             }

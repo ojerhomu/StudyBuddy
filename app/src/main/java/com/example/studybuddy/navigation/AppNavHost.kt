@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,17 +13,18 @@ import com.example.studybuddy.ui.OnboardingViewModel
 import com.example.studybuddy.ui.screens.*
 
 @Composable
-fun AppNavHost() {
+fun AppNavHost(onboardingViewModel: OnboardingViewModel) {
     val navController = rememberNavController()
     val context = LocalContext.current
-    val onboardingViewModel: OnboardingViewModel = viewModel()
 
     val sharedPref = context.getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
     val token = sharedPref.getString("JWT_TOKEN", null)
     val startDestination = if (token != null) "menu" else "login"
 
+    // When a user is logged in, load their profile and schedule data
     if (token != null) {
         LaunchedEffect(Unit) {
+            onboardingViewModel.loadUserProfile(context)
             onboardingViewModel.loadUserSchedule(context)
         }
     }
@@ -46,12 +46,12 @@ fun AppNavHost() {
         // Onboarding & Settings Flow
         composable("onboarding_name") { OnboardingNameScreen(onboardingViewModel = onboardingViewModel) { navController.navigate("onboarding_education") } }
         composable("onboarding_education") { OnboardingEducationScreen { _ -> navController.navigate("onboarding_subjects") } }
-        
-        composable("onboarding_subjects") { 
+
+        composable("onboarding_subjects") {
             val previousRoute = navController.previousBackStackEntry?.destination?.route
             OnboardingSubjectsScreen(
-                onboardingViewModel = onboardingViewModel, 
-                onNext = { 
+                onboardingViewModel = onboardingViewModel,
+                onNext = {
                     if (previousRoute == "change_subjects") {
                         navController.popBackStack()
                     } else {
@@ -61,11 +61,11 @@ fun AppNavHost() {
                 shouldSaveOnDispose = (previousRoute == "change_subjects")
             )
         }
-        
-        composable("onboarding_schedule") { 
-            OnboardingScheduleScreen(onboardingViewModel = onboardingViewModel) { 
+
+        composable("onboarding_schedule") {
+            OnboardingScheduleScreen(onboardingViewModel = onboardingViewModel) {
                 onboardingViewModel.saveUserSchedule(context)
-                navController.navigate("onboarding_confirmation") 
+                navController.navigate("onboarding_confirmation")
             }
         }
         composable("onboarding_confirmation") {
@@ -79,7 +79,7 @@ fun AppNavHost() {
             OnboardingWelcomeScreen(onFinish = { navController.navigate("menu") { popUpTo("login") { inclusive = true } } })
         }
         composable("settings") { SettingsScreen(navController = navController) }
-        composable("change_subjects") { 
+        composable("change_subjects") {
             ChangeSubjectsScreen(navController = navController, onboardingViewModel = onboardingViewModel) {
                 onboardingViewModel.saveUserSchedule(context)
             }
@@ -101,7 +101,8 @@ fun AppNavHost() {
         composable("edit_sessions") { EditSessionsScreen() }
         composable("task_submenu") { TaskSubMenuScreen(onNavigate = { route -> navController.navigate(route) }) }
         composable("view_tasks") { ViewTasksScreen() }
-        
+        composable("start_session") { StartSessionScreen(onboardingViewModel) } // FIX: Add route and screen
+
         // Practice & Quiz Flow
         composable("practice") { PracticeScreen(navController = navController) }
         composable("chat_history") { ChatHistoryScreen(navController = navController) }

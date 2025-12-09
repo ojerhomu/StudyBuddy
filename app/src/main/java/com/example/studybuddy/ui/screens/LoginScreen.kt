@@ -62,7 +62,7 @@ fun LoginScreen(onLogin: () -> Unit, onNavigateToRegister: () -> Unit) {
                             if (token != null) {
                                 // make sure token is saved before navigating
                                 val sharedPref = context.getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
-                                sharedPref.edit().putString("JWT_TOKEN", token).commit()
+                                sharedPref.edit().putString("JWT_TOKEN", token).apply()
                                 onLogin()
                             } else {
                                 Toast.makeText(context, "Login failed: Token not received.", Toast.LENGTH_SHORT).show()
@@ -87,17 +87,17 @@ fun LoginScreen(onLogin: () -> Unit, onNavigateToRegister: () -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        var generatedText by remember { mutableStateOf("Loading...") }
-        LaunchedEffect(Unit) {
-            try {
-                val model = Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel("gemini-2.5-flash")
-                val prompt = "In a sentence or two, greet the user and ask a question about what or how they will be focusing on studying that day."
-                generatedText = model.generateContent(prompt).text ?: "No response from model."
-            } catch (e: Exception) {
-                generatedText = "Failed to load content."
-            }
-        }
-        Text(text = generatedText)
+//this is so i dont get rate limited but if i want to reference how Kara did the code
+        // var generatedText by remember { mutableStateOf("Loading...") }
+        // LaunchedEffect(Unit) {
+        //     try {
+        //         val model = Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel("gemini-2.5-flash")
+        //         val prompt = "In a sentence or two, greet the user and ask a question about what or how they will be focusing on studying that day."
+        //         generatedText = model.generateContent(prompt).text ?: "No response from model."
+        //     } catch (e: Exception) {
+        //         generatedText = "Failed to load content."
+        //     }
+        // }
+        // Text(text = generatedText)
     }
 }

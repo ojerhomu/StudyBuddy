@@ -17,18 +17,13 @@ import com.example.studybuddy.ui.OnboardingViewModel
 @Composable
 fun ChangeSubjectsScreen(
     navController: NavController, 
-    onboardingViewModel: OnboardingViewModel, // FIX THIS: make ViewModel a required parameter
-    onSubjectsChanged: () -> Unit
+    onboardingViewModel: OnboardingViewModel,
+    onSubjectsChanged: () -> Unit // save data
 ) {
     var subjectToDelete by remember { mutableStateOf<String?>(null) }
     val subjects = onboardingViewModel.subjectDetailsMap.keys.toList()
 
-    // save changes when the user leaves the screen
-    DisposableEffect(Unit) {
-        onDispose {
-            onSubjectsChanged()
-        }
-    }
+    // remove dispossible effect
 
     subjectToDelete?.let { subject ->
         AlertDialog(
@@ -76,12 +71,25 @@ fun ChangeSubjectsScreen(
             )
         }
         
-        Button(
-            onClick = { navController.navigate("onboarding_subjects") }, 
-            modifier = Modifier.fillMaxWidth(),
-            enabled = subjects.size < 7 // can't use button when limit is reached
-        ) {
-            Text("Add a Class")
+        Row {
+            Button(
+                onClick = { navController.navigate("onboarding_subjects") }, 
+                modifier = Modifier.weight(1f),
+                enabled = subjects.size < 7
+            ) {
+                Text("Add a Class")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            // FIX: add a done button to save changes
+            Button(
+                onClick = { 
+                    onSubjectsChanged()
+                    navController.popBackStack() 
+                }, 
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Done")
+            }
         }
     }
 }

@@ -1,7 +1,14 @@
 package com.example.studybuddy.ui.screens
 
 import android.os.Build
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -23,7 +30,6 @@ import coil.decode.ImageDecoderDecoder
 import com.example.studybuddy.R
 import com.example.studybuddy.ui.MenuViewModel
 import com.example.studybuddy.ui.OnboardingViewModel
-import com.example.studybuddy.ui.UpcomingDisplayItem
 import com.example.studybuddy.ui.components.SpeechBubbleWithContent
 import java.time.format.DateTimeFormatter
 
@@ -34,6 +40,13 @@ fun MenuScreen(
     onboardingViewModel: OnboardingViewModel
 ) {
     val context = LocalContext.current
+
+    // ensure the user's profile and schedule are loaded whenever this screen appears
+    LaunchedEffect(Unit) {
+        onboardingViewModel.loadUserProfile(context)
+        onboardingViewModel.loadUserSchedule(context)
+    }
+
     val imageLoader = ImageLoader.Builder(context)
         .components {
             if (Build.VERSION.SDK_INT >= 28) {
@@ -45,10 +58,12 @@ fun MenuScreen(
         .build()
 
     val subjectDetailsMap = onboardingViewModel.subjectDetailsMap
+    val userFirstName by onboardingViewModel.firstName
 
-    LaunchedEffect(subjectDetailsMap.isNotEmpty()) {
-        if (subjectDetailsMap.isNotEmpty()) {
-            menuViewModel.loadData(context, subjectDetailsMap)
+    // when i have a user name and schedule, populate the menu data
+    LaunchedEffect(userFirstName, subjectDetailsMap.size) {
+        if (userFirstName != null && subjectDetailsMap.isNotEmpty()) {
+            menuViewModel.loadData(context, subjectDetailsMap, userFirstName)
         }
     }
 
@@ -61,7 +76,7 @@ fun MenuScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()), // FIX: Make the entire screen scrollable because that speech bubble can get big as shit
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         SpeechBubbleWithContent {
@@ -72,30 +87,53 @@ fun MenuScreen(
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Here\'s what\'s coming up:", style = MaterialTheme.typography.titleLarge)
+                Text("Here's what's coming up:", style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (soonestTask == null && todaysClasses.isEmpty() && todaysStudySessions.isEmpty()) {
-                    Text("Nothing on your schedule yet!", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Nothing on your schedule yet!",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 } else {
                     soonestTask?.let {
-                        val formattedDate = it.dateTime.format(DateTimeFormatter.ofPattern("MMM d, h:mm a"))
-                        Text("• ${it.description} on $formattedDate", modifier = Modifier.padding(vertical = 4.dp))
+                        val formattedDate = it.dateTime.format(
+                            DateTimeFormatter.ofPattern("MMM d, h:mm a")
+                        )
+                        Text(
+                            "• ${it.description} on $formattedDate",
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
                     }
                     if (todaysClasses.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Today\'s Classes:", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Today's Classes:",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                         todaysClasses.forEach { item ->
-                            val formattedTime = "${item.startTime.format(DateTimeFormatter.ofPattern("h:mm a"))} - ${item.endTime.format(DateTimeFormatter.ofPattern("h:mm a"))}"
-                            Text("• ${item.subject}: $formattedTime", modifier = Modifier.padding(vertical = 4.dp))
+                            val formattedTime =
+                                "${item.startTime.format(DateTimeFormatter.ofPattern("h:mm a"))} - " +
+                                        item.endTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+                            Text(
+                                "• ${item.subject}: $formattedTime",
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
                         }
                     }
                     if (todaysStudySessions.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Today\'s Study Sessions:", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Today's Study Sessions:",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                         todaysStudySessions.forEach { item ->
-                            val formattedTime = item.dateTime.format(DateTimeFormatter.ofPattern("h:mm a"))
-                            Text("• ${item.description} at $formattedTime", modifier = Modifier.padding(vertical = 4.dp))
+                            val formattedTime =
+                                item.dateTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+                            Text(
+                                "• ${item.description} at $formattedTime",
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
                         }
                     }
                 }
@@ -111,22 +149,56 @@ fun MenuScreen(
             modifier = Modifier.size(200.dp)
         )
 
-        // buttons are apart of scrollable
         Column(
             modifier = Modifier.fillMaxWidth(0.81f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("study_scheduler_menu") }) { Text("Study Scheduler") }
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onNavigate("start_session") }
+            ) { Text("Start a Study Session") }
+
             Spacer(modifier = Modifier.height(12.dp))
-            Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("task_submenu") }) { Text("Assignments & Tasks") }
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onNavigate("study_scheduler_menu") }
+            ) { Text("Study Scheduler") }
+
             Spacer(modifier = Modifier.height(12.dp))
-            Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("calendar") }) { Text("Calendar") }
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onNavigate("task_submenu") }
+            ) { Text("Assignments & Tasks") }
+
             Spacer(modifier = Modifier.height(12.dp))
-            Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("practice") }) { Text("Practice / Quiz") }
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onNavigate("calendar") }
+            ) { Text("Calendar") }
+
             Spacer(modifier = Modifier.height(12.dp))
-            Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("settings") }) { Text("Settings") }
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onNavigate("practice") }
+            ) { Text("Practice / Quiz") }
+
             Spacer(modifier = Modifier.height(12.dp))
-            Button(modifier = Modifier.fillMaxWidth(), onClick = { onNavigate("profile") }) { Text("My Profile") }
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onNavigate("settings") }
+            ) { Text("Settings") }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onNavigate("profile") }
+            ) { Text("My Profile") }
         }
     }
 }

@@ -5,14 +5,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.studybuddy.network.ProfileResponse
-import com.example.studybuddy.network.RetrofitInstance
 import com.example.studybuddy.ui.OnboardingViewModel
 import com.example.studybuddy.ui.QuizViewModel
-import com.example.studybuddy.ui.components.ChatUi // FIX: import the new generic UI
+import com.example.studybuddy.ui.components.ChatUi
 import com.example.studybuddy.ui.components.SubjectSelectionScreen
 
 @Composable
@@ -23,15 +20,7 @@ fun QuizScreen(
     var selectedSubject by remember { mutableStateOf<String?>(null) }
     var topics by remember { mutableStateOf("") }
     var quizStarted by remember { mutableStateOf(false) }
-    var profile by remember { mutableStateOf<ProfileResponse?>(null) }
-    val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        val response = RetrofitInstance.getAuthApi(context).getProfile()
-        if (response.isSuccessful) {
-            profile = response.body()
-        }
-    }
+    val userFirstName by onboardingViewModel.firstName
 
     when {
         !quizStarted && selectedSubject == null -> {
@@ -47,15 +36,13 @@ fun QuizScreen(
                 topicList ->
                 topics = topicList
                 quizStarted = true
-                val userName = profile?.first_name ?: "User"
-                quizViewModel.startQuiz(selectedSubject!!, topics, userName)
+                quizViewModel.startQuiz(selectedSubject!!, topics, userFirstName ?: "User")
             })
         }
         quizStarted -> {
-            // FIX: use  ChatUi
             ChatUi(
                 messages = quizViewModel.messages,
-                userName = profile?.first_name ?: "You",
+                userName = userFirstName ?: "You",
                 onSendMessage = { quizViewModel.sendMessage(it) }
             )
         }
@@ -86,5 +73,3 @@ private fun TopicSelectionScreen(subject: String, onStartQuiz: (String) -> Unit)
         }
     }
 }
-
-// I removed QuizChatScreen  and replaced with the generic ChatUi

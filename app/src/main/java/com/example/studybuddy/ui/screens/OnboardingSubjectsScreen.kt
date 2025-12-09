@@ -35,7 +35,7 @@ fun OnboardingSubjectsScreen(
         }
     }
 
-    // IMPLEMENT LaunchedEffect to safely initialize state and avoid race conditions
+    // IMPLEMENT launched effect to safely initialize state and avoid race conditions
     var selectedSubjects by remember { mutableStateOf<Set<String>>(emptySet()) }
     LaunchedEffect(onboardingViewModel.subjectDetailsMap.keys) {
         selectedSubjects = onboardingViewModel.subjectDetailsMap.keys

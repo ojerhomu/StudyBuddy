@@ -47,6 +47,7 @@ fun AddTaskScreen(onTaskAdded: () -> Unit, onboardingViewModel: OnboardingViewMo
     if (showTimePicker) {
         TimePickerDialog(
             onDismissRequest = { showTimePicker = false },
+            subjectName = "Task",
             onTimeSelected = { time ->
                 dueTime = time
                 showTimePicker = false

@@ -32,7 +32,6 @@ fun OnboardingScheduleScreen(
     onboardingViewModel: OnboardingViewModel,
     onScheduleComplete: () -> Unit
 ) {
-    val subjects = onboardingViewModel.subjectDetailsMap.keys.toList()
     val subjectDetailsMap = onboardingViewModel.subjectDetailsMap
     val asyncSubjects = onboardingViewModel.asyncSubjects
     
@@ -43,7 +42,6 @@ fun OnboardingScheduleScreen(
     var showColorPicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // dialog
     if (showDayPicker) {
         subjectCurrentlyScheduling?.let { subject ->
             DayOfWeekPickerDialog(
@@ -97,7 +95,6 @@ fun OnboardingScheduleScreen(
         }
     }
 
-    // MAIN UI
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -109,7 +106,7 @@ fun OnboardingScheduleScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            subjects.forEach { subject ->
+            subjectDetailsMap.keys.forEach { subject ->
                 subjectDetailsMap[subject]?.let {
                     details ->
                     SubjectScheduleCard(
@@ -156,7 +153,6 @@ private fun findConflict(scheduleMap: Map<String, SubjectDetails>, days: Set<Day
                         }
                     } catch (e: DateTimeParseException) {
                         Log.e("OnboardingSchedule", "Could not parse existing schedule time: ${info.startTime} or ${info.endTime}", e)
-                        // invalid time in the schedule should not block creating a new one
                     }
                 }
             }
@@ -174,5 +170,56 @@ private fun SubjectScheduleCard(
     onAddTimeClicked: () -> Unit,
     onSetColorClicked: () -> Unit
 ) {
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a") }
+    val color = try { Color(android.graphics.Color.parseColor(details.color)) } catch (e: Exception) { Color.Gray }
 
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(subjectName, style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(color))
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            details.schedule.groupBy { "${it.startTime}-${it.endTime}" }.values.forEach { infos ->
+                val firstInfo = infos.first()
+                val days = infos.map { it.day.name.take(3) }.distinct().joinToString(", ")
+                
+                val scheduleText = if (firstInfo.startTime != null && firstInfo.endTime != null) {
+                    try {
+                        val startTime = LocalTime.parse(firstInfo.startTime)
+                        val endTime = LocalTime.parse(firstInfo.endTime)
+                        "$days at ${startTime.format(timeFormatter)} - ${endTime.format(timeFormatter)}"
+                    } catch (e: DateTimeParseException) {
+                        Log.e("SubjectScheduleCard", "Failed to parse schedule time: ${firstInfo.startTime}", e)
+                        null
+                    }
+                } else {
+                    null
+                }
+
+                if (scheduleText != null) {
+                    Text(scheduleText)
+                }
+            }
+            
+            if (details.schedule.isNotEmpty()) Spacer(modifier = Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = isAsynchronous, onCheckedChange = onAsynchronousChanged)
+                Text("This class is asynchronous (no set time)")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row {
+                Button(onClick = onAddTimeClicked, enabled = !isAsynchronous, modifier = Modifier.weight(1f)) {
+                    Text("Add/Edit Class Time")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = onSetColorClicked, modifier = Modifier.weight(1f)) {
+                    Text("Set Color")
+                }
+            }
+        }
+    }
 }
