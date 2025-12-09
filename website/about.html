@@ -1,3 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About Study Buddy</title>
+    <link rel="icon" type="image/png" href="/StudyBuddy/website/images/el_icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #1f2937;
+            background:
+                radial-gradient(500px 500px at 15% 20%, rgba(79, 148, 255, 0.20), transparent 60%),
+                radial-gradient(450px 450px at 85% 10%, rgba(110, 231, 183, 0.18), transparent 55%),
+                linear-gradient(180deg, #f8fbff 0%, #eef3ff 60%, #f8fbff 100%);
+        }
+
+        nav {
+            background: #333;
+            padding: 15px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        nav a {
+            color: white;
+            margin: 0 20px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav a:hover { text-decoration: underline; }
+
+        header {
+            background: linear-gradient(135deg, #4A90E2, #63b3ff);
+            color: white;
+            text-align: center;
+            padding: 70px 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        header h1 { margin: 0; font-size: 48px; }
+        header p { font-size: 20px; margin-top: 10px; }
+
+        .content {
+            max-width: 900px;
+            margin: 40px auto 60px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 { color: #2563eb; margin-top: 0; }
+        p { line-height: 1.6; }
+
+        .logo-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 25px 0;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 25px;
+        }
+
+        .buttons a {
+            display: inline-block;
+            padding: 12px 20px;
+            background: #2563eb;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+        }
+
+        .buttons a:hover { background: #1d4ed8; }
+    </style>
+</head>
+
 <body>
 
 <nav>
@@ -20,30 +111,29 @@
         and assignments. At the center of the experience is El the Elephant, an AI agent powered by Google Gemini.
     </p>
 
-<div style="text-align: center; margin: 20px 0;">
-    <img src="/StudyBuddy/website/images/mascot_el.png" alt="El the Study Buddy mascot" width="150">
-</div>
+    <div style="text-align: center; margin: 20px 0;">
+        <img src="/StudyBuddy/website/images/mascot_el.png" alt="El the Study Buddy mascot" width="150">
+    </div>
 
-<h2>Technology</h2>
-<p>The app uses a modern backend and mobile development stack:</p>
+    <h2>Technology</h2>
+    <p>The app uses a modern backend and mobile development stack:</p>
 
-<div class="logo-row">
-    <img src="/StudyBuddy/website/images/postgresql.png" alt="PostgreSQL" width="135">
-    <img src="/StudyBuddy/website/images/fastapi.png" alt="FastAPI" width="135">
-    <img src="/StudyBuddy/website/images/kotlin.png" alt="Kotlin" width="135">
-</div>
+    <div class="logo-row">
+        <img src="/StudyBuddy/website/images/postgresql.png" alt="PostgreSQL" width="135">
+        <img src="/StudyBuddy/website/images/fastapi.png" alt="FastAPI" width="135">
+        <img src="/StudyBuddy/website/images/kotlin.png" alt="Kotlin" width="135">
+    </div>
 
-<h2>Status</h2>
-<p>
-    The Study Buddy App is currently in development and close to completion.
-    You can follow updates on GitHub or download the final report below.
-</p>
+    <h2>Status</h2>
+    <p>
+        The Study Buddy App is currently in development and close to completion.
+        You can follow updates on GitHub or download the final report below.
+    </p>
 
-<div class="buttons">
-    <a href="https://github.com/ojerhomu/StudyBuddy" target="_blank">GitHub Repository</a>
-    <a href="/StudyBuddy/website/INDY1-StudyBuddy-FinalReport.pdf" download>Download Report</a>
-</div>
-
+    <div class="buttons">
+        <a href="https://github.com/ojerhomu/StudyBuddy" target="_blank">GitHub Repository</a>
+        <a href="/StudyBuddy/website/INDY1-StudyBuddy-FinalReport.pdf" download>Download Report</a>
+    </div>
 </div>
 
 </body>
