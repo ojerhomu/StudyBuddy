@@ -45,7 +45,7 @@ fun DayDetailsDialog(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Events Section ---
+            // events
             Text("Events & Tasks", style = MaterialTheme.typography.titleMedium)
             LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
                 if (events.isEmpty()) {
@@ -87,7 +87,7 @@ fun DayDetailsDialog(
 
             Divider(modifier = Modifier.padding(vertical = 16.dp))
 
-            // --- Class Schedule Section ---
+            // class schedule section
             Text("Today\'s Classes", style = MaterialTheme.typography.titleMedium)
             LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
                  if (classSchedule.isEmpty()) {

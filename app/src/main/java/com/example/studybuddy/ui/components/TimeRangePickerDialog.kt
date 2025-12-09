@@ -36,13 +36,13 @@ fun TimeRangePickerDialog(
             Text("What time is $subjectName?", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Start Time Picker
+            // start time picker
             Text("Start Time")
             TimeSelector(hour = startHour, minute = startMinute, isAm = startIsAm, onHourChange = { startHour = it }, onMinuteChange = { startMinute = it }, onAmPmChange = { startIsAm = it })
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // End Time Picker
+            // end time picker
             Text("End Time")
             TimeSelector(hour = endHour, minute = endMinute, isAm = endIsAm, onHourChange = { endHour = it }, onMinuteChange = { endMinute = it }, onAmPmChange = { endIsAm = it })
 

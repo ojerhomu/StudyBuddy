@@ -16,10 +16,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.studybuddy.network.RetrofitInstance
 import com.example.studybuddy.network.UserCreateRequest
+import com.example.studybuddy.ui.OnboardingViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun RegisterScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit) {
+fun RegisterScreen(
+    onboardingViewModel: OnboardingViewModel,
+    onRegisterSuccess: () -> Unit,
+    onBackToLogin: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
@@ -63,7 +68,8 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit) {
                             if (token != null) {
                                 val sharedPref = context.getSharedPreferences("APP_PREFS", Context.MODE_PRIVATE)
                                 sharedPref.edit().putString("JWT_TOKEN", token).apply()
-                                // go to onboarding only after token is saved
+                                // Clear data before navigating
+                                onboardingViewModel.clearData()
                                 onRegisterSuccess()
                             } else {
                                 Toast.makeText(context, "Auto-login failed: Token not received.", Toast.LENGTH_LONG).show()

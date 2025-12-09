@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    // Client for public endpoints (no interceptor)
+    // client for public endpoints (no interceptor)
     private val publicRetrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(PublicApiService.BASE_URL)
@@ -20,7 +20,7 @@ object RetrofitInstance {
         publicRetrofit.create(PublicApiService::class.java)
     }
 
-    // --- Authenticated Client ---
+    // authenticated client
 
     @Volatile
     private var AUTH_INSTANCE: AuthApiService? = null

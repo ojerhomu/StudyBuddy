@@ -11,11 +11,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.example.studybuddy.network.ChatSessionSummary
 import com.example.studybuddy.network.RetrofitInstance
@@ -29,28 +26,25 @@ fun ChatHistoryScreen(navController: NavController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var sessionToDelete by remember { mutableStateOf<ChatSessionSummary?>(null) }
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                coroutineScope.launch {
-                    try {
-                        val response = RetrofitInstance.getAuthApi(context).getChatSessions()
-                        if (response.isSuccessful) {
-                            chatSessions = response.body()?.sortedByDescending { it.created_at }?.take(10) ?: emptyList()
-                        } else {
-                            errorMessage = "Failed to load chat history."
-                        }
-                    } catch (e: Exception) {
-                        errorMessage = "An error occurred while loading chat history."
-                    }
+    // load chat history when this screen first appears
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            try {
+                val response = RetrofitInstance.getAuthApi(context).getChatSessions()
+                if (response.isSuccessful) {
+                    chatSessions = response.body()
+                        ?.sortedByDescending { it.created_at }
+                        ?.take(10)
+                        ?: emptyList()
+                } else {
+                    errorMessage = "Failed to load chat history. (${response.code()})"
                 }
+            } catch (e: Exception) {
+                errorMessage = "An error occurred while loading chat history."
             }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     // confirm delete
@@ -63,18 +57,23 @@ fun ChatHistoryScreen(navController: NavController) {
                 Button(onClick = {
                     coroutineScope.launch {
                         try {
-                            val response = RetrofitInstance.getAuthApi(context).deleteChatSession(session.id)
+                            val response = RetrofitInstance.getAuthApi(context)
+                                .deleteChatSession(session.id)
                             if (response.isSuccessful) {
                                 chatSessions = chatSessions.filter { it.id != session.id }
                             }
-                        } catch (e: Exception) {
-                            // handle error
+                        } catch (_: Exception) {
+                            //  set errorMessage here
                         }
                         sessionToDelete = null
                     }
                 }) { Text("Yes, Delete") }
             },
-            dismissButton = { Button(onClick = { sessionToDelete = null }) { Text("Cancel") } }
+            dismissButton = {
+                Button(onClick = { sessionToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 
@@ -100,27 +99,37 @@ fun ChatHistoryScreen(navController: NavController) {
             Text(errorMessage!!, color = MaterialTheme.colorScheme.error)
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item { 
+                item {
                     Text("Previous Chats", style = MaterialTheme.typography.titleMedium)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
                 }
                 if (chatSessions.isEmpty()) {
                     item {
-                        Text("No saved chats yet.", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 16.dp))
+                        Text(
+                            "No saved chats yet.",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
+                        )
                     }
                 } else {
-                    items(chatSessions) {
-                        session ->
+                    items(chatSessions) { session ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { navController.navigate("homework_help/${session.id}") }
+                                .clickable {
+                                    navController.navigate("homework_help/${session.id}")
+                                }
                                 .padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             val formattedDate = try {
-                                LocalDateTime.parse(session.created_at, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+                                LocalDateTime.parse(
+                                    session.created_at,
+                                    DateTimeFormatter.ISO_DATE_TIME
+                                ).format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
                             } catch (e: Exception) {
                                 session.created_at
                             }

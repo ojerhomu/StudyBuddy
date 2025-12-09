@@ -20,6 +20,18 @@ class OnboardingViewModel : ViewModel() {
 
     val asyncSubjects = mutableStateMapOf<String, Boolean>()
 
+    fun clearData() {
+        subjectDetailsMap.clear()
+        asyncSubjects.clear()
+        firstName.value = null
+        lastName.value = null
+        educationLevel.value = null
+        email.value = null
+        pomodoroStudyMinutes.value = null
+        pomodoroShortBreakMinutes.value = null
+        pomodoroLongBreakMinutes.value = null
+    }
+
     fun loadUserSchedule(context: Context) {
         viewModelScope.launch {
             try {

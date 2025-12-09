@@ -379,7 +379,7 @@ private fun TimerScreen(
         coroutineScope.launch {
             try {
                 val model = Firebase.ai(backend = GenerativeBackend.googleAI())
-                    .generativeModel("gemini-2.0-flash-001")
+                    .generativeModel("gemini-2.5-flash")
                 val prompt =
                     "Either: Write a sentence or two of encouragement for a student who's currently studying with a timer OR give a fun fact about how the student studying is statistically improving their chances of getting a better grade!"
                 encouragement = model.generateContent(prompt).text ?: "Keep going!"

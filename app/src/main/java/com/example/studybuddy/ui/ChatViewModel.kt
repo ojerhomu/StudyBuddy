@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.studybuddy.network.ChatMessage
 import com.example.studybuddy.network.CreateChatRequest
 import com.example.studybuddy.network.RetrofitInstance
+import com.example.studybuddy.network.UpdateChatRequest
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
@@ -24,7 +25,7 @@ class ChatViewModel : ViewModel() {
     private var sessionId: Int? = null
 
     private val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
-        modelName = "gemini-2.0-flash-001",
+        modelName = "gemini-2.5-flash",
         systemInstruction = content(role = "system") {
             text("You are El, a friendly and encouraging study buddy. Your goal is to help students with their homework by guiding them to the answer, not by giving it away. Ask questions, provide hints, and break down problems into smaller steps. Always be patient and positive. The user's name will be provided at the start of the conversation; use it occasionally.")
         }
@@ -89,18 +90,27 @@ class ChatViewModel : ViewModel() {
     }
 
     fun saveChat(context: Context) {
-        if (sessionId != null || _messages.size <= 1) return
+        // Only save if there are messages to save.
+        if (_messages.size <= 1) return
 
         viewModelScope.launch {
             try {
-                val title = "Chat from ${LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))}"
-                val response = RetrofitInstance.getAuthApi(context).saveChatSession(CreateChatRequest(title, _messages.toList()))
-                if (response.isSuccessful) {
-                    sessionId = response.body()?.id
+                if (sessionId == null) {
+                    // this is a new chat, so create it
+                    val title = "Chat from ${LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))}"
+                    val response = RetrofitInstance.getAuthApi(context).saveChatSession(CreateChatRequest(title, _messages.toList()))
+                    if (response.isSuccessful) {
+                        // update the sessionId after creation
+                        sessionId = response.body()?.id
+                    }
+                } else {
+                    // This is an existing chat, so update it.
+                    RetrofitInstance.getAuthApi(context).updateChatSession(sessionId!!, UpdateChatRequest(_messages.toList()))
                 }
             } catch (e: Exception) {
-                Log.e("ChatViewModel", "Failed to save chat session", e)
+                Log.e("ChatViewModel", "Failed to save or update chat session", e)
             }
         }
     }
+
 }

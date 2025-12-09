@@ -88,7 +88,7 @@ private fun TimePickerRow(
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("$label: ", modifier = Modifier.width(80.dp))
-        // Hour Dropdown
+        // hour
         ExposedDropdownMenuBox(expanded = showHourDropdown, onExpandedChange = { showHourDropdown = it }) {
             OutlinedTextField(value = "$hour", onValueChange = {}, readOnly = true, modifier = Modifier.menuAnchor().width(70.dp))
             ExposedDropdownMenu(expanded = showHourDropdown, onDismissRequest = { showHourDropdown = false }) {
@@ -96,14 +96,14 @@ private fun TimePickerRow(
             }
         }
         Text(":")
-        // Minute Dropdown
+        // minute
         ExposedDropdownMenuBox(expanded = showMinuteDropdown, onExpandedChange = { showMinuteDropdown = it }) {
             OutlinedTextField(value = String.format("%02d", minute), onValueChange = {}, readOnly = true, modifier = Modifier.menuAnchor().width(70.dp))
             ExposedDropdownMenu(expanded = showMinuteDropdown, onDismissRequest = { showMinuteDropdown = false }) {
                 (0..59 step 5).forEach { m -> DropdownMenuItem(text = { Text(String.format("%02d", m)) }, onClick = { onTimeChanged(hour, m, amPm); showMinuteDropdown = false }) }
             }
         }
-        // AM/PM Dropdown
+        // AM/PM dropdown
         ExposedDropdownMenuBox(expanded = showAmPmDropdown, onExpandedChange = { showAmPmDropdown = it }) {
             OutlinedTextField(value = amPm, onValueChange = {}, readOnly = true, modifier = Modifier.menuAnchor().width(80.dp))
             ExposedDropdownMenu(expanded = showAmPmDropdown, onDismissRequest = { showAmPmDropdown = false }) {

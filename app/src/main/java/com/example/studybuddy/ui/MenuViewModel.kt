@@ -29,7 +29,8 @@ sealed class UpcomingDisplayItem {
 
 class MenuViewModel : ViewModel() {
 
-    private val _greeting = mutableStateOf("Loading...")
+
+    private val _greeting = mutableStateOf("")
     val greeting: State<String> = _greeting
 
     private val _soonestTask = mutableStateOf<UpcomingDisplayItem.DatedItem?>(null)
@@ -41,11 +42,30 @@ class MenuViewModel : ViewModel() {
     private val _todaysStudySessions = mutableStateOf<List<UpcomingDisplayItem.DatedItem>>(emptyList())
     val todaysStudySessions: State<List<UpcomingDisplayItem.DatedItem>> = _todaysStudySessions
 
-    fun refreshData(context: Context, subjectDetails: Map<String, SubjectDetails>, userName: String?) {
+    // dont spam ai
+    private var hasLoadedOnce = false
+
+    fun refreshData(
+        context: Context,
+        subjectDetails: Map<String, SubjectDetails>,
+        userName: String?
+    ) {
+        //call refresh explicitly, allow reloading
+        hasLoadedOnce = false
         loadData(context, subjectDetails, userName)
     }
 
-    fun loadData(context: Context, subjectDetails: Map<String, SubjectDetails>, userName: String?) {
+    fun loadData(
+        context: Context,
+        subjectDetails: Map<String, SubjectDetails>,
+        userName: String?
+    ) {
+        //  already loaded once and have a greeting, don't do it again
+        if (hasLoadedOnce && _greeting.value.isNotBlank()) {
+            return
+        }
+        hasLoadedOnce = true
+
         viewModelScope.launch {
             try {
                 val authApi = RetrofitInstance.getAuthApi(context)
@@ -53,17 +73,35 @@ class MenuViewModel : ViewModel() {
                 val tasksDeferred = async { authApi.getTasks() }
                 val eventsDeferred = async { authApi.getEvents() }
 
-                val greetingText = try {
-                    val model = Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel("gemini-2.0-flash-001")
-                    val namePrompt = if (userName != null) "for a student named $userName" else "for a student"
-                    val prompt = "Write a short, upbeat, one-sentence greeting $namePrompt. Every so often, include a clever and encouraging pun about studying or learning. Keep it concise."
-                    val response = model.generateContent(prompt)
-                    "Welcome back${if (userName != null) ", $userName" else ""}! ${response.text}"
-                } catch (e: Exception) {
-                    Log.e("MenuViewModel", "AI Greeting failed: ", e)
-                    if (userName != null) "Welcome back, $userName!" else "Welcome back! Let's get to it!"
+                // gen greeting once
+                if (_greeting.value.isBlank()) {
+                    // In MenuViewModel.kt, inside the loadData function
+
+                    val greetingText = try {
+                        val model = Firebase
+                            .ai(backend = GenerativeBackend.googleAI())
+                            .generativeModel("gemini-2.5-flash")
+
+                        val namePrompt =
+                            if (userName != null) "for a student named $userName" else "for a student"
+                        val prompt =
+                            "Write a short, upbeat, one-sentence greeting $namePrompt. " +
+                                    "Every so often, include a clever and encouraging pun about studying or learning. " +
+                                    "Keep it concise." + "Generate the greeting one time"
+
+                        val response = model.generateContent(prompt)
+
+                        // fallback
+                        response.text?.takeIf { it.isNotBlank() } ?: "Welcome back!"
+
+                    } catch (e: Exception) {
+                        Log.e("MenuViewModel", "AI Greeting failed: ", e)
+                        if (userName != null) "Welcome back, $userName!"
+                        else "Welcome back! Let's get to it!"
+                    }
+                    _greeting.value = greetingText
+
                 }
-                _greeting.value = greetingText
 
                 val tasksResponse = tasksDeferred.await()
                 val eventsResponse = eventsDeferred.await()
@@ -84,7 +122,9 @@ class MenuViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 Log.e("MenuViewModel", "Data loading failed: ", e)
-                _greeting.value = "Welcome back! You've got this!"
+                if (_greeting.value.isBlank()) {
+                    _greeting.value = "Welcome back! You've got this!"
+                }
                 _soonestTask.value = null
                 _todaysClasses.value = emptyList()
                 _todaysStudySessions.value = emptyList()
@@ -92,26 +132,38 @@ class MenuViewModel : ViewModel() {
         }
     }
 
-    private fun findSoonestTask(tasks: List<Task>, now: LocalDateTime): UpcomingDisplayItem.DatedItem? {
+    private fun findSoonestTask(
+        tasks: List<Task>,
+        now: LocalDateTime
+    ): UpcomingDisplayItem.DatedItem? {
         return tasks
             .mapNotNull { task ->
                 try {
-                    task.due_date?.let { Pair(task, LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME)) }
+                    task.due_date?.let {
+                        Pair(task, LocalDateTime.parse(it, DateTimeFormatter.ISO_DATE_TIME))
+                    }
                 } catch (e: DateTimeParseException) {
                     Log.e("MenuViewModel", "Failed to parse task due_date: ${task.due_date}", e)
                     null
                 }
             }
             .filter { it.second.isAfter(now) }
-            .minByOrNull { it.second }?.let { UpcomingDisplayItem.DatedItem(it.second, "Task: ${it.first.title}") }
+            .minByOrNull { it.second }
+            ?.let { (task, dateTime) ->
+                UpcomingDisplayItem.DatedItem(dateTime, "Task: ${task.title}")
+            }
     }
 
-    private fun findTodaysStudySessions(events: List<CalendarEvent>, today: LocalDate): List<UpcomingDisplayItem.DatedItem> {
+    private fun findTodaysStudySessions(
+        events: List<CalendarEvent>,
+        today: LocalDate
+    ): List<UpcomingDisplayItem.DatedItem> {
         return events
             .filter { it.event_type == "STUDY_SESSION" }
             .mapNotNull { event ->
                 try {
-                    val eventDateTime = LocalDateTime.parse(event.start_time, DateTimeFormatter.ISO_DATE_TIME)
+                    val eventDateTime =
+                        LocalDateTime.parse(event.start_time, DateTimeFormatter.ISO_DATE_TIME)
                     if (eventDateTime.toLocalDate() == today) {
                         UpcomingDisplayItem.DatedItem(eventDateTime, event.title)
                     } else {
@@ -125,24 +177,33 @@ class MenuViewModel : ViewModel() {
             .sortedBy { it.dateTime }
     }
 
-    private fun findTodaysClasses(subjectDetails: Map<String, SubjectDetails>, today: DayOfWeek): List<UpcomingDisplayItem.ClassItem> {
-        return subjectDetails.flatMap { (subject, details) ->
-            details.schedule
-                .filter { it.day == today }
-                .mapNotNull { scheduleInfo ->
-                    if (scheduleInfo.startTime != null && scheduleInfo.endTime != null) {
-                        try {
-                            val startTime = LocalTime.parse(scheduleInfo.startTime)
-                            val endTime = LocalTime.parse(scheduleInfo.endTime)
-                            UpcomingDisplayItem.ClassItem(subject, startTime, endTime)
-                        } catch (e: DateTimeParseException) {
-                            Log.e("MenuViewModel", "Failed to parse class time: ${scheduleInfo.startTime} or ${scheduleInfo.endTime}", e)
-                            null // handle parsing error
+    private fun findTodaysClasses(
+        subjectDetails: Map<String, SubjectDetails>,
+        today: DayOfWeek
+    ): List<UpcomingDisplayItem.ClassItem> {
+        return subjectDetails
+            .flatMap { (subject, details) ->
+                details.schedule
+                    .filter { it.day == today }
+                    .mapNotNull { scheduleInfo ->
+                        if (scheduleInfo.startTime != null && scheduleInfo.endTime != null) {
+                            try {
+                                val startTime = LocalTime.parse(scheduleInfo.startTime)
+                                val endTime = LocalTime.parse(scheduleInfo.endTime)
+                                UpcomingDisplayItem.ClassItem(subject, startTime, endTime)
+                            } catch (e: DateTimeParseException) {
+                                Log.e(
+                                    "MenuViewModel",
+                                    "Failed to parse class time: ${scheduleInfo.startTime} or ${scheduleInfo.endTime}",
+                                    e
+                                )
+                                null
+                            }
+                        } else {
+                            null
                         }
-                    } else {
-                        null
                     }
-                }
-        }.sortedBy { it.startTime }
+            }
+            .sortedBy { it.startTime }
     }
 }

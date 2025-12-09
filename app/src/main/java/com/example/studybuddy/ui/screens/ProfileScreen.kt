@@ -87,6 +87,7 @@ fun ProfileScreen(onLogout: () -> Unit, onboardingViewModel: OnboardingViewModel
                 remove("JWT_TOKEN")
                 apply() //  apply for asynchronous save
             }
+            onboardingViewModel.clearData()
             onLogout()
         }) {
             Text("Logout")

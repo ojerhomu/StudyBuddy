@@ -7,10 +7,11 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import java.time.DayOfWeek
 
-// --- Data Classes for Authenticated API ---
+//data classes for authenticated API
 
 data class ProfileResponse(
     val id: Int,
@@ -58,14 +59,16 @@ data class EventRequest(
     val event_type: String
 )
 
-// --- Data classes for Schedule ---
+// data classes for schedule
 
 data class ScheduleInfo(val day: DayOfWeek, val startTime: String?, val endTime: String?)
 data class SubjectDetails(val schedule: List<ScheduleInfo>, val color: String)
 data class UserScheduleResponse(val schedule: Map<String, SubjectDetails>)
 data class ApiScheduleSaveRequest(val schedule: Map<String, SubjectDetails>)
 
-// --- Data classes for Chat ---
+data class UpdateChatRequest(val messages: List<ChatMessage>)
+
+// data classes for chat
 data class ChatMessage(val message: String, val isFromUser: Boolean)
 data class ChatSessionSummary(val id: Int, val title: String, val created_at: String)
 data class ChatSessionDetail(val id: Int, val title: String, val messages: List<ChatMessage>)
@@ -108,7 +111,7 @@ interface AuthApiService {
     @DELETE("/calendar/events/{eventId}")
     suspend fun deleteEvent(@Path("eventId") eventId: Int): Response<Unit>
 
-    // --- Chat Endpoints ---
+    // chat endpoints
     @GET("/chats/")
     suspend fun getChatSessions(): Response<List<ChatSessionSummary>>
 
@@ -117,6 +120,12 @@ interface AuthApiService {
 
     @GET("/chats/{chatId}")
     suspend fun getChatSession(@Path("chatId") chatId: Int): Response<ChatSessionDetail>
+
+    @PUT("chats/{id}")
+    suspend fun updateChatSession(
+        @Path("id") id: Int,
+        @Body chatRequest: UpdateChatRequest
+    ): Response<Unit>
 
     @DELETE("/chats/{chatId}")
     suspend fun deleteChatSession(@Path("chatId") chatId: Int): Response<Unit>

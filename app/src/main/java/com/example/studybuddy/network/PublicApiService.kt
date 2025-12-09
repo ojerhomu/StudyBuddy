@@ -6,7 +6,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 
-// --- Data Classes for Public API ---
+// data classes for public api
 
 data class LoginResponse(
     val access_token: String,
@@ -21,7 +21,7 @@ data class UserCreateResponse(val id: Int, val email: String)
  * Interface for API endpoints that DO NOT require authentication.
  */
 interface PublicApiService {
-    // Login still requires FormUrlEncoded
+
     @FormUrlEncoded
     @POST("/login")
     suspend fun login(
@@ -29,7 +29,7 @@ interface PublicApiService {
         @Field("password") password: String
     ): Response<LoginResponse>
 
-    // Register expects a JSON body
+    // reg expects a JSON body
     @POST("/register")
     suspend fun register(@Body userCreateRequest: UserCreateRequest): Response<UserCreateResponse>
 

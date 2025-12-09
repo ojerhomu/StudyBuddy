@@ -21,7 +21,7 @@ fun AppNavHost(onboardingViewModel: OnboardingViewModel) {
     val token = sharedPref.getString("JWT_TOKEN", null)
     val startDestination = if (token != null) "menu" else "login"
 
-    // When a user is logged in, load their profile and schedule data
+    // when a freaking user is logged in, load their profile and schedule data
     if (token != null) {
         LaunchedEffect(Unit) {
             onboardingViewModel.loadUserProfile(context)
@@ -38,6 +38,7 @@ fun AppNavHost(onboardingViewModel: OnboardingViewModel) {
         }
         composable("register") {
             RegisterScreen(
+                onboardingViewModel = onboardingViewModel,
                 onRegisterSuccess = { navController.navigate("onboarding_name") },
                 onBackToLogin = { navController.popBackStack() }
             )
@@ -91,7 +92,7 @@ fun AppNavHost(onboardingViewModel: OnboardingViewModel) {
             }
         }
 
-        // Main App Screens
+        // the main App Screens
         composable("menu") { MenuScreen(onNavigate = { route -> navController.navigate(route) }, onboardingViewModel = onboardingViewModel) }
         composable("calendar") { CalendarScreen(onboardingViewModel = onboardingViewModel) }
         composable("profile") { ProfileScreen(onLogout = { navController.navigate("login") { popUpTo("menu") { inclusive = true }; launchSingleTop = true } }, onboardingViewModel = onboardingViewModel) }
@@ -103,7 +104,7 @@ fun AppNavHost(onboardingViewModel: OnboardingViewModel) {
         composable("view_tasks") { ViewTasksScreen() }
         composable("start_session") { StartSessionScreen(onboardingViewModel) } // FIX: Add route and screen
 
-        // Practice & Quiz Flow
+        // flow for quiz and hw help
         composable("practice") { PracticeScreen(navController = navController) }
         composable("chat_history") { ChatHistoryScreen(navController = navController) }
         composable(

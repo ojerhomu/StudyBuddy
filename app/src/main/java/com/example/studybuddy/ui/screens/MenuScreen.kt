@@ -1,22 +1,13 @@
 package com.example.studybuddy.ui.screens
 
 import android.os.Build
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,7 +32,7 @@ fun MenuScreen(
 ) {
     val context = LocalContext.current
 
-    // ensure the user's profile and schedule are loaded whenever this screen appears
+    // make sure the user's profile and schedule start loading when this screen appears
     LaunchedEffect(Unit) {
         onboardingViewModel.loadUserProfile(context)
         onboardingViewModel.loadUserSchedule(context)
@@ -60,17 +51,20 @@ fun MenuScreen(
     val subjectDetailsMap = onboardingViewModel.subjectDetailsMap
     val userFirstName by onboardingViewModel.firstName
 
-    // when i have a user name and schedule, populate the menu data
-    LaunchedEffect(userFirstName, subjectDetailsMap.size) {
-        if (userFirstName != null && subjectDetailsMap.isNotEmpty()) {
-            menuViewModel.loadData(context, subjectDetailsMap, userFirstName)
-        }
-    }
-
     val greeting by menuViewModel.greeting
     val soonestTask by menuViewModel.soonestTask
     val todaysClasses by menuViewModel.todaysClasses
     val todaysStudySessions by menuViewModel.todaysStudySessions
+
+    // decide when to load data for the menu
+    val isProfileLoaded = userFirstName != null
+
+    LaunchedEffect(isProfileLoaded, subjectDetailsMap.size) {
+        if (isProfileLoaded) {
+            // makes sure we don't spam the AI or backend unnecessarily.
+            menuViewModel.loadData(context, subjectDetailsMap, userFirstName)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -82,7 +76,7 @@ fun MenuScreen(
         SpeechBubbleWithContent {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = greeting,
+                    text = if (greeting.isBlank()) "Loading your day..." else greeting,
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = TextAlign.Center
                 )
